@@ -27,20 +27,21 @@ class Liability {
     String? name,
     int? typeId,
     double? amount,
-    double? interestRate,
-    DateTime? dueDate,
+    Object? interestRate = _sentinel,
+    Object? dueDate = _sentinel,
     String? currency,
-    String? notes,
+    Object? notes = _sentinel,
   }) {
     return Liability(
       id: id ?? this.id,
       name: name ?? this.name,
       typeId: typeId ?? this.typeId,
       amount: amount ?? this.amount,
-      interestRate: interestRate ?? this.interestRate,
-      dueDate: dueDate ?? this.dueDate,
+      interestRate:
+          interestRate == _sentinel ? this.interestRate : interestRate as double?,
+      dueDate: dueDate == _sentinel ? this.dueDate : dueDate as DateTime?,
       currency: currency ?? this.currency,
-      notes: notes ?? this.notes,
+      notes: notes == _sentinel ? this.notes : notes as String?,
     );
   }
 
@@ -50,4 +51,9 @@ class Liability {
 
   @override
   int get hashCode => id.hashCode;
+
+  @override
+  String toString() => 'Liability(id: $id, name: $name, amount: $amount)';
 }
+
+const _sentinel = Object();

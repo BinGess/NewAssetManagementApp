@@ -7,7 +7,8 @@ extension ExpenseCycleLabel on ExpenseCycle {
         ExpenseCycle.monthly => '每月',
         ExpenseCycle.yearly => '每年',
       };
-
-  static ExpenseCycle fromString(String s) =>
-      ExpenseCycle.values.firstWhere((e) => e.name == s);
 }
+
+/// Parse an ExpenseCycle from its string name (e.g. 'monthly' → ExpenseCycle.monthly)
+ExpenseCycle expenseCycleFromString(String s) =>
+    ExpenseCycle.values.firstWhere((e) => e.name == s);
