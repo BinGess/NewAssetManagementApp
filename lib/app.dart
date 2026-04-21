@@ -8,11 +8,11 @@ import 'screens/assets/asset_detail_screen.dart';
 import 'screens/assets/asset_list_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/liabilities/liability_list_screen.dart';
 import 'widgets/common/main_shell.dart';
 import 'widgets/common/placeholder_screen.dart';
 
 // Placeholder screens for phases not yet implemented
-const _liabilitiesPlaceholder = PlaceholderScreen(title: '负债');
 const _expensesPlaceholder = PlaceholderScreen(title: '支出');
 const _typesPlaceholder = PlaceholderScreen(title: '类型管理');
 const _settingsPlaceholder = PlaceholderScreen(title: '设置');
@@ -52,7 +52,7 @@ class _AppState extends ConsumerState<App> {
                 return AssetDetailScreen(assetId: id);
               },
             ),
-            GoRoute(path: '/liabilities', builder: (_, __) => _liabilitiesPlaceholder),
+            GoRoute(path: '/liabilities', builder: (_, __) => const LiabilityListScreen()),
             GoRoute(path: '/expenses', builder: (_, __) => _expensesPlaceholder),
             GoRoute(path: '/types', builder: (_, __) => _typesPlaceholder),
             GoRoute(path: '/settings', builder: (_, __) => _settingsPlaceholder),
