@@ -3,7 +3,6 @@ import 'package:new_asset_management_app/data/models/asset.dart';
 
 void main() {
   final baseDate = DateTime(2024, 1, 1);
-  final startDate = DateTime(2023, 1, 1); // 366 days before baseDate (2023 is not a leap year, use 365 days)
 
   group('Asset earnings calculations', () {
     test('returns null for assets without annual rate', () {

@@ -1,4 +1,4 @@
-/// Returns an error message string if invalid, null if valid.
+// Returns an error message string if invalid, null if valid.
 
 String? validateRequired(String? value, {String fieldName = '此字段'}) {
   if (value == null || value.trim().isEmpty) {
