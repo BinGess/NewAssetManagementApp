@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/dashboard/dashboard_screen.dart';
 import 'widgets/common/main_shell.dart';
 import 'widgets/common/placeholder_screen.dart';
 
 // Placeholder screens for phases not yet implemented
-const _dashboardPlaceholder = PlaceholderScreen(title: '总览');
 const _assetsPlaceholder = PlaceholderScreen(title: '资产');
 const _liabilitiesPlaceholder = PlaceholderScreen(title: '负债');
 const _expensesPlaceholder = PlaceholderScreen(title: '支出');
@@ -41,7 +41,7 @@ class _AppState extends ConsumerState<App> {
         ShellRoute(
           builder: (context, state, child) => MainShell(child: child),
           routes: [
-            GoRoute(path: '/', builder: (_, __) => _dashboardPlaceholder),
+            GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
             GoRoute(path: '/assets', builder: (_, __) => _assetsPlaceholder),
             GoRoute(
               path: '/assets/:id',
