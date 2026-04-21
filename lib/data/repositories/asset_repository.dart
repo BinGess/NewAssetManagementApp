@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import '../database/app_database.dart';
 import '../models/asset.dart' as asset_model;
 import '../models/asset_change.dart' as change_model;
+import '../models/asset_holding.dart' as holding_model;
 
 class AssetRepository {
   final AppDatabase _db;
@@ -84,10 +85,11 @@ class AssetRepository {
 
   // --- Holdings ---
 
-  Stream<List<AssetHolding>> watchHoldings(int assetId) {
+  Stream<List<holding_model.AssetHolding>> watchHoldings(int assetId) {
     return (_db.select(_db.assetHoldings)
           ..where((t) => t.assetId.equals(assetId)))
-        .watch();
+        .watch()
+        .map((rows) => rows.map(_holdingFromRow).toList());
   }
 
   Future<int> insertHolding({
@@ -106,8 +108,15 @@ class AssetRepository {
         ));
   }
 
-  Future<bool> updateHolding(AssetHolding holding) {
-    return _db.update(_db.assetHoldings).replace(holding);
+  Future<bool> updateHolding(holding_model.AssetHolding holding) {
+    return _db.update(_db.assetHoldings).replace(AssetHoldingsCompanion(
+          id: Value(holding.id),
+          assetId: Value(holding.assetId),
+          name: Value(holding.name),
+          price: Value(holding.price),
+          quantity: Value(holding.quantity),
+          notes: Value(holding.notes),
+        ));
   }
 
   Future<int> deleteHolding(int holdingId) {
@@ -145,6 +154,16 @@ class AssetRepository {
         beforeAmount: row.beforeAmount,
         afterAmount: row.afterAmount,
         createdAt: row.createdAt,
+        notes: row.notes,
+      );
+
+  holding_model.AssetHolding _holdingFromRow(AssetHolding row) =>
+      holding_model.AssetHolding(
+        id: row.id,
+        assetId: row.assetId,
+        name: row.name,
+        price: row.price,
+        quantity: row.quantity,
         notes: row.notes,
       );
 }

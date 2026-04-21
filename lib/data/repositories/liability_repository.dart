@@ -8,14 +8,16 @@ class LiabilityRepository {
   LiabilityRepository(this._db);
 
   Stream<List<model.Liability>> watchAll() {
-    return _db
-        .select(_db.liabilities)
+    return (_db.select(_db.liabilities)
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
         .watch()
         .map((rows) => rows.map(_fromRow).toList());
   }
 
   Future<List<model.Liability>> getAll() async {
-    final rows = await _db.select(_db.liabilities).get();
+    final rows = await (_db.select(_db.liabilities)
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .get();
     return rows.map(_fromRow).toList();
   }
 
