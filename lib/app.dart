@@ -84,7 +84,9 @@ class _AppState extends ConsumerState<App> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: '资产管理',
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       routerConfig: _router,
       locale: const Locale('zh', 'CN'),
       localizationsDelegates: const [

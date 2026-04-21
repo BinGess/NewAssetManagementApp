@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../data/models/dashboard_summary.dart';
-import '../common/amount_text.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../common/app_card.dart';
 
 class NetWorthCard extends StatelessWidget {
@@ -12,47 +12,113 @@ class NetWorthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return GlassCardHero(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      gradientColors: [
+        AppColors.primary.withValues(alpha: 0.22),
+        AppColors.bgPurple.withValues(alpha: 0.55),
+        AppColors.bgDeep.withValues(alpha: 0.6),
+      ],
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Net worth prominently in the center
+          // Header row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.4), width: 1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '净资产',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.primary.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              const Icon(
+                Icons.trending_up_rounded,
+                color: AppColors.textSecondary,
+                size: 18,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Net worth number — hero display
           Text(
-            '净资产',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            formatCNY(summary.netWorth),
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.w800,
+              color: AppColors.netWorthColor,
+              letterSpacing: -1,
+              height: 1.1,
+            ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          AmountText(
-            amount: summary.netWorth,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.netWorthColor,
-                ),
+          const SizedBox(height: AppSpacing.md + 4),
+
+          // Divider
+          Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.0),
+                  Colors.white.withValues(alpha: 0.12),
+                  Colors.white.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1),
-          const SizedBox(height: AppSpacing.md),
-          // Assets and liabilities side by side
+
+          // Assets + Liabilities row
           Row(
             children: [
               Expanded(
-                child: _SummaryItem(
+                child: _MetricItem(
                   label: '总资产',
                   amount: summary.totalAssets,
                   color: AppColors.assetColor,
+                  icon: Icons.trending_up_rounded,
+                  iconBg: AppColors.assetGlow,
                 ),
               ),
               Container(
                 width: 1,
-                height: 40,
-                color: Colors.grey.shade200,
+                height: 48,
+                color: AppColors.glassDivider,
               ),
               Expanded(
-                child: _SummaryItem(
+                child: _MetricItem(
                   label: '总负债',
                   amount: summary.totalLiabilities,
                   color: AppColors.liabilityColor,
+                  icon: Icons.trending_down_rounded,
+                  iconBg: AppColors.liabilityGlow,
                 ),
               ),
             ],
@@ -63,36 +129,62 @@ class NetWorthCard extends StatelessWidget {
   }
 }
 
-class _SummaryItem extends StatelessWidget {
+class _MetricItem extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
+  final IconData icon;
+  final Color iconBg;
 
-  const _SummaryItem({
+  const _MetricItem({
     required this.label,
     required this.amount,
     required this.color,
+    required this.icon,
+    required this.iconBg,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 16),
               ),
-        ),
-        const SizedBox(height: 4),
-        AmountText(
-          amount: amount,
-          color: color,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-        ),
-      ],
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            formatCNY(amount),
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
