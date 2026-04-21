@@ -4,13 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
+import 'screens/assets/asset_detail_screen.dart';
+import 'screens/assets/asset_list_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'widgets/common/main_shell.dart';
 import 'widgets/common/placeholder_screen.dart';
 
 // Placeholder screens for phases not yet implemented
-const _assetsPlaceholder = PlaceholderScreen(title: '资产');
 const _liabilitiesPlaceholder = PlaceholderScreen(title: '负债');
 const _expensesPlaceholder = PlaceholderScreen(title: '支出');
 const _typesPlaceholder = PlaceholderScreen(title: '类型管理');
@@ -42,13 +43,13 @@ class _AppState extends ConsumerState<App> {
           builder: (context, state, child) => MainShell(child: child),
           routes: [
             GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
-            GoRoute(path: '/assets', builder: (_, __) => _assetsPlaceholder),
+            GoRoute(path: '/assets', builder: (_, __) => const AssetListScreen()),
             GoRoute(
               path: '/assets/:id',
               builder: (context, state) {
                 final id = int.tryParse(state.pathParameters['id'] ?? '');
-                if (id == null) return _assetsPlaceholder;
-                return PlaceholderScreen(title: '资产详情 #$id');
+                if (id == null) return const AssetListScreen();
+                return AssetDetailScreen(assetId: id);
               },
             ),
             GoRoute(path: '/liabilities', builder: (_, __) => _liabilitiesPlaceholder),
