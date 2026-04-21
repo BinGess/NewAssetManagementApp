@@ -5,5 +5,8 @@ class LiabilityTypes extends Table {
   TextColumn get code => text().withLength(min: 1, max: 50)();
   TextColumn get label => text().withLength(min: 1, max: 100)();
   BoolColumn get enabled => boolean().withDefault(const Constant(true))();
-  IntColumn get order => integer().withDefault(const Constant(0))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [{code}];
 }

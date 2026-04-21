@@ -5,5 +5,7 @@ class Snapshots extends Table {
   RealColumn get totalAssets => real()();
   RealColumn get totalLiabilities => real()();
   RealColumn get netWorth => real()();
-  DateTimeColumn get createdAt => dateTime()();
+  TextColumn get currency => text().withDefault(const Constant('CNY'))();
+  DateTimeColumn get createdAt =>
+      dateTime().clientDefault(() => DateTime.now())();
 }

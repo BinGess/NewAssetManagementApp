@@ -44,40 +44,40 @@ class AppDatabase extends _$AppDatabase {
       );
 
   Future<void> _seedDefaultData() async {
-    // Seed 8 default asset types in Chinese
-    final assetTypeLabels = [
-      ('AT1', '现金及活期'),
-      ('AT2', '定期存款'),
-      ('AT3', '货币基金'),
-      ('AT4', '股票'),
-      ('AT5', '基金'),
-      ('AT6', '债券'),
-      ('AT7', '房产'),
-      ('AT8', '其他'),
-    ];
-    for (var i = 0; i < assetTypeLabels.length; i++) {
-      await into(assetTypes).insert(AssetTypesCompanion(
-        code: Value(assetTypeLabels[i].$1),
-        label: Value(assetTypeLabels[i].$2),
-        order: Value(i),
-      ));
-    }
+    await transaction(() async {
+      final assetTypeLabels = [
+        ('AT1', '现金及活期'),
+        ('AT2', '定期存款'),
+        ('AT3', '货币基金'),
+        ('AT4', '股票'),
+        ('AT5', '基金'),
+        ('AT6', '债券'),
+        ('AT7', '房产'),
+        ('AT8', '其他'),
+      ];
+      for (var i = 0; i < assetTypeLabels.length; i++) {
+        await into(assetTypes).insert(AssetTypesCompanion(
+          code: Value(assetTypeLabels[i].$1),
+          label: Value(assetTypeLabels[i].$2),
+          sortOrder: Value(i),
+        ));
+      }
 
-    // Seed 5 default liability types in Chinese
-    final liabilityTypeLabels = [
-      ('LT1', '房贷'),
-      ('LT2', '车贷'),
-      ('LT3', '信用卡'),
-      ('LT4', '个人贷款'),
-      ('LT5', '其他'),
-    ];
-    for (var i = 0; i < liabilityTypeLabels.length; i++) {
-      await into(liabilityTypes).insert(LiabilityTypesCompanion(
-        code: Value(liabilityTypeLabels[i].$1),
-        label: Value(liabilityTypeLabels[i].$2),
-        order: Value(i),
-      ));
-    }
+      final liabilityTypeLabels = [
+        ('LT1', '房贷'),
+        ('LT2', '车贷'),
+        ('LT3', '信用卡'),
+        ('LT4', '个人贷款'),
+        ('LT5', '其他'),
+      ];
+      for (var i = 0; i < liabilityTypeLabels.length; i++) {
+        await into(liabilityTypes).insert(LiabilityTypesCompanion(
+          code: Value(liabilityTypeLabels[i].$1),
+          label: Value(liabilityTypeLabels[i].$2),
+          sortOrder: Value(i),
+        ));
+      }
+    });
   }
 }
 

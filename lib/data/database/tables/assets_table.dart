@@ -3,8 +3,9 @@ import 'asset_types_table.dart';
 
 class Assets extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get name => text()();
-  IntColumn get typeId => integer().references(AssetTypes, #id)();
+  TextColumn get name => text().withLength(min: 1, max: 200)();
+  IntColumn get typeId => integer().references(AssetTypes, #id,
+      onDelete: KeyAction.restrict)();
   RealColumn get amount => real()();
   TextColumn get currency => text().withDefault(const Constant('CNY'))();
   DateTimeColumn get valuationDate => dateTime()();

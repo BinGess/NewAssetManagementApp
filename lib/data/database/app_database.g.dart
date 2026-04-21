@@ -44,15 +44,16 @@ class $AssetTypesTable extends AssetTypes
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("enabled" IN (0, 1))'),
       defaultValue: const Constant(true));
-  static const VerificationMeta _orderMeta = const VerificationMeta('order');
+  static const VerificationMeta _sortOrderMeta =
+      const VerificationMeta('sortOrder');
   @override
-  late final GeneratedColumn<int> order = GeneratedColumn<int>(
-      'order', aliasedName, false,
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+      'sort_order', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
   @override
-  List<GeneratedColumn> get $columns => [id, code, label, enabled, order];
+  List<GeneratedColumn> get $columns => [id, code, label, enabled, sortOrder];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -82,15 +83,19 @@ class $AssetTypesTable extends AssetTypes
       context.handle(_enabledMeta,
           enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta));
     }
-    if (data.containsKey('order')) {
-      context.handle(
-          _orderMeta, order.isAcceptableOrUnknown(data['order']!, _orderMeta));
+    if (data.containsKey('sort_order')) {
+      context.handle(_sortOrderMeta,
+          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
     }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {code},
+      ];
   @override
   AssetType map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -103,8 +108,8 @@ class $AssetTypesTable extends AssetTypes
           .read(DriftSqlType.string, data['${effectivePrefix}label'])!,
       enabled: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}enabled'])!,
-      order: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}order'])!,
+      sortOrder: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
     );
   }
 
@@ -119,13 +124,13 @@ class AssetType extends DataClass implements Insertable<AssetType> {
   final String code;
   final String label;
   final bool enabled;
-  final int order;
+  final int sortOrder;
   const AssetType(
       {required this.id,
       required this.code,
       required this.label,
       required this.enabled,
-      required this.order});
+      required this.sortOrder});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -133,7 +138,7 @@ class AssetType extends DataClass implements Insertable<AssetType> {
     map['code'] = Variable<String>(code);
     map['label'] = Variable<String>(label);
     map['enabled'] = Variable<bool>(enabled);
-    map['order'] = Variable<int>(order);
+    map['sort_order'] = Variable<int>(sortOrder);
     return map;
   }
 
@@ -143,7 +148,7 @@ class AssetType extends DataClass implements Insertable<AssetType> {
       code: Value(code),
       label: Value(label),
       enabled: Value(enabled),
-      order: Value(order),
+      sortOrder: Value(sortOrder),
     );
   }
 
@@ -155,7 +160,7 @@ class AssetType extends DataClass implements Insertable<AssetType> {
       code: serializer.fromJson<String>(json['code']),
       label: serializer.fromJson<String>(json['label']),
       enabled: serializer.fromJson<bool>(json['enabled']),
-      order: serializer.fromJson<int>(json['order']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
     );
   }
   @override
@@ -166,18 +171,22 @@ class AssetType extends DataClass implements Insertable<AssetType> {
       'code': serializer.toJson<String>(code),
       'label': serializer.toJson<String>(label),
       'enabled': serializer.toJson<bool>(enabled),
-      'order': serializer.toJson<int>(order),
+      'sortOrder': serializer.toJson<int>(sortOrder),
     };
   }
 
   AssetType copyWith(
-          {int? id, String? code, String? label, bool? enabled, int? order}) =>
+          {int? id,
+          String? code,
+          String? label,
+          bool? enabled,
+          int? sortOrder}) =>
       AssetType(
         id: id ?? this.id,
         code: code ?? this.code,
         label: label ?? this.label,
         enabled: enabled ?? this.enabled,
-        order: order ?? this.order,
+        sortOrder: sortOrder ?? this.sortOrder,
       );
   AssetType copyWithCompanion(AssetTypesCompanion data) {
     return AssetType(
@@ -185,7 +194,7 @@ class AssetType extends DataClass implements Insertable<AssetType> {
       code: data.code.present ? data.code.value : this.code,
       label: data.label.present ? data.label.value : this.label,
       enabled: data.enabled.present ? data.enabled.value : this.enabled,
-      order: data.order.present ? data.order.value : this.order,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
     );
   }
 
@@ -196,13 +205,13 @@ class AssetType extends DataClass implements Insertable<AssetType> {
           ..write('code: $code, ')
           ..write('label: $label, ')
           ..write('enabled: $enabled, ')
-          ..write('order: $order')
+          ..write('sortOrder: $sortOrder')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, code, label, enabled, order);
+  int get hashCode => Object.hash(id, code, label, enabled, sortOrder);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -211,7 +220,7 @@ class AssetType extends DataClass implements Insertable<AssetType> {
           other.code == this.code &&
           other.label == this.label &&
           other.enabled == this.enabled &&
-          other.order == this.order);
+          other.sortOrder == this.sortOrder);
 }
 
 class AssetTypesCompanion extends UpdateCompanion<AssetType> {
@@ -219,20 +228,20 @@ class AssetTypesCompanion extends UpdateCompanion<AssetType> {
   final Value<String> code;
   final Value<String> label;
   final Value<bool> enabled;
-  final Value<int> order;
+  final Value<int> sortOrder;
   const AssetTypesCompanion({
     this.id = const Value.absent(),
     this.code = const Value.absent(),
     this.label = const Value.absent(),
     this.enabled = const Value.absent(),
-    this.order = const Value.absent(),
+    this.sortOrder = const Value.absent(),
   });
   AssetTypesCompanion.insert({
     this.id = const Value.absent(),
     required String code,
     required String label,
     this.enabled = const Value.absent(),
-    this.order = const Value.absent(),
+    this.sortOrder = const Value.absent(),
   })  : code = Value(code),
         label = Value(label);
   static Insertable<AssetType> custom({
@@ -240,14 +249,14 @@ class AssetTypesCompanion extends UpdateCompanion<AssetType> {
     Expression<String>? code,
     Expression<String>? label,
     Expression<bool>? enabled,
-    Expression<int>? order,
+    Expression<int>? sortOrder,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (code != null) 'code': code,
       if (label != null) 'label': label,
       if (enabled != null) 'enabled': enabled,
-      if (order != null) 'order': order,
+      if (sortOrder != null) 'sort_order': sortOrder,
     });
   }
 
@@ -256,13 +265,13 @@ class AssetTypesCompanion extends UpdateCompanion<AssetType> {
       Value<String>? code,
       Value<String>? label,
       Value<bool>? enabled,
-      Value<int>? order}) {
+      Value<int>? sortOrder}) {
     return AssetTypesCompanion(
       id: id ?? this.id,
       code: code ?? this.code,
       label: label ?? this.label,
       enabled: enabled ?? this.enabled,
-      order: order ?? this.order,
+      sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 
@@ -281,8 +290,8 @@ class AssetTypesCompanion extends UpdateCompanion<AssetType> {
     if (enabled.present) {
       map['enabled'] = Variable<bool>(enabled.value);
     }
-    if (order.present) {
-      map['order'] = Variable<int>(order.value);
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
     }
     return map;
   }
@@ -294,7 +303,7 @@ class AssetTypesCompanion extends UpdateCompanion<AssetType> {
           ..write('code: $code, ')
           ..write('label: $label, ')
           ..write('enabled: $enabled, ')
-          ..write('order: $order')
+          ..write('sortOrder: $sortOrder')
           ..write(')'))
         .toString();
   }
@@ -341,15 +350,16 @@ class $LiabilityTypesTable extends LiabilityTypes
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("enabled" IN (0, 1))'),
       defaultValue: const Constant(true));
-  static const VerificationMeta _orderMeta = const VerificationMeta('order');
+  static const VerificationMeta _sortOrderMeta =
+      const VerificationMeta('sortOrder');
   @override
-  late final GeneratedColumn<int> order = GeneratedColumn<int>(
-      'order', aliasedName, false,
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+      'sort_order', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
   @override
-  List<GeneratedColumn> get $columns => [id, code, label, enabled, order];
+  List<GeneratedColumn> get $columns => [id, code, label, enabled, sortOrder];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -379,15 +389,19 @@ class $LiabilityTypesTable extends LiabilityTypes
       context.handle(_enabledMeta,
           enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta));
     }
-    if (data.containsKey('order')) {
-      context.handle(
-          _orderMeta, order.isAcceptableOrUnknown(data['order']!, _orderMeta));
+    if (data.containsKey('sort_order')) {
+      context.handle(_sortOrderMeta,
+          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
     }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {code},
+      ];
   @override
   LiabilityType map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -400,8 +414,8 @@ class $LiabilityTypesTable extends LiabilityTypes
           .read(DriftSqlType.string, data['${effectivePrefix}label'])!,
       enabled: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}enabled'])!,
-      order: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}order'])!,
+      sortOrder: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
     );
   }
 
@@ -416,13 +430,13 @@ class LiabilityType extends DataClass implements Insertable<LiabilityType> {
   final String code;
   final String label;
   final bool enabled;
-  final int order;
+  final int sortOrder;
   const LiabilityType(
       {required this.id,
       required this.code,
       required this.label,
       required this.enabled,
-      required this.order});
+      required this.sortOrder});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -430,7 +444,7 @@ class LiabilityType extends DataClass implements Insertable<LiabilityType> {
     map['code'] = Variable<String>(code);
     map['label'] = Variable<String>(label);
     map['enabled'] = Variable<bool>(enabled);
-    map['order'] = Variable<int>(order);
+    map['sort_order'] = Variable<int>(sortOrder);
     return map;
   }
 
@@ -440,7 +454,7 @@ class LiabilityType extends DataClass implements Insertable<LiabilityType> {
       code: Value(code),
       label: Value(label),
       enabled: Value(enabled),
-      order: Value(order),
+      sortOrder: Value(sortOrder),
     );
   }
 
@@ -452,7 +466,7 @@ class LiabilityType extends DataClass implements Insertable<LiabilityType> {
       code: serializer.fromJson<String>(json['code']),
       label: serializer.fromJson<String>(json['label']),
       enabled: serializer.fromJson<bool>(json['enabled']),
-      order: serializer.fromJson<int>(json['order']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
     );
   }
   @override
@@ -463,18 +477,22 @@ class LiabilityType extends DataClass implements Insertable<LiabilityType> {
       'code': serializer.toJson<String>(code),
       'label': serializer.toJson<String>(label),
       'enabled': serializer.toJson<bool>(enabled),
-      'order': serializer.toJson<int>(order),
+      'sortOrder': serializer.toJson<int>(sortOrder),
     };
   }
 
   LiabilityType copyWith(
-          {int? id, String? code, String? label, bool? enabled, int? order}) =>
+          {int? id,
+          String? code,
+          String? label,
+          bool? enabled,
+          int? sortOrder}) =>
       LiabilityType(
         id: id ?? this.id,
         code: code ?? this.code,
         label: label ?? this.label,
         enabled: enabled ?? this.enabled,
-        order: order ?? this.order,
+        sortOrder: sortOrder ?? this.sortOrder,
       );
   LiabilityType copyWithCompanion(LiabilityTypesCompanion data) {
     return LiabilityType(
@@ -482,7 +500,7 @@ class LiabilityType extends DataClass implements Insertable<LiabilityType> {
       code: data.code.present ? data.code.value : this.code,
       label: data.label.present ? data.label.value : this.label,
       enabled: data.enabled.present ? data.enabled.value : this.enabled,
-      order: data.order.present ? data.order.value : this.order,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
     );
   }
 
@@ -493,13 +511,13 @@ class LiabilityType extends DataClass implements Insertable<LiabilityType> {
           ..write('code: $code, ')
           ..write('label: $label, ')
           ..write('enabled: $enabled, ')
-          ..write('order: $order')
+          ..write('sortOrder: $sortOrder')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, code, label, enabled, order);
+  int get hashCode => Object.hash(id, code, label, enabled, sortOrder);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -508,7 +526,7 @@ class LiabilityType extends DataClass implements Insertable<LiabilityType> {
           other.code == this.code &&
           other.label == this.label &&
           other.enabled == this.enabled &&
-          other.order == this.order);
+          other.sortOrder == this.sortOrder);
 }
 
 class LiabilityTypesCompanion extends UpdateCompanion<LiabilityType> {
@@ -516,20 +534,20 @@ class LiabilityTypesCompanion extends UpdateCompanion<LiabilityType> {
   final Value<String> code;
   final Value<String> label;
   final Value<bool> enabled;
-  final Value<int> order;
+  final Value<int> sortOrder;
   const LiabilityTypesCompanion({
     this.id = const Value.absent(),
     this.code = const Value.absent(),
     this.label = const Value.absent(),
     this.enabled = const Value.absent(),
-    this.order = const Value.absent(),
+    this.sortOrder = const Value.absent(),
   });
   LiabilityTypesCompanion.insert({
     this.id = const Value.absent(),
     required String code,
     required String label,
     this.enabled = const Value.absent(),
-    this.order = const Value.absent(),
+    this.sortOrder = const Value.absent(),
   })  : code = Value(code),
         label = Value(label);
   static Insertable<LiabilityType> custom({
@@ -537,14 +555,14 @@ class LiabilityTypesCompanion extends UpdateCompanion<LiabilityType> {
     Expression<String>? code,
     Expression<String>? label,
     Expression<bool>? enabled,
-    Expression<int>? order,
+    Expression<int>? sortOrder,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (code != null) 'code': code,
       if (label != null) 'label': label,
       if (enabled != null) 'enabled': enabled,
-      if (order != null) 'order': order,
+      if (sortOrder != null) 'sort_order': sortOrder,
     });
   }
 
@@ -553,13 +571,13 @@ class LiabilityTypesCompanion extends UpdateCompanion<LiabilityType> {
       Value<String>? code,
       Value<String>? label,
       Value<bool>? enabled,
-      Value<int>? order}) {
+      Value<int>? sortOrder}) {
     return LiabilityTypesCompanion(
       id: id ?? this.id,
       code: code ?? this.code,
       label: label ?? this.label,
       enabled: enabled ?? this.enabled,
-      order: order ?? this.order,
+      sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 
@@ -578,8 +596,8 @@ class LiabilityTypesCompanion extends UpdateCompanion<LiabilityType> {
     if (enabled.present) {
       map['enabled'] = Variable<bool>(enabled.value);
     }
-    if (order.present) {
-      map['order'] = Variable<int>(order.value);
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
     }
     return map;
   }
@@ -591,7 +609,7 @@ class LiabilityTypesCompanion extends UpdateCompanion<LiabilityType> {
           ..write('code: $code, ')
           ..write('label: $label, ')
           ..write('enabled: $enabled, ')
-          ..write('order: $order')
+          ..write('sortOrder: $sortOrder')
           ..write(')'))
         .toString();
   }
@@ -615,15 +633,18 @@ class $AssetsTable extends Assets with TableInfo<$AssetsTable, Asset> {
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
   static const VerificationMeta _typeIdMeta = const VerificationMeta('typeId');
   @override
   late final GeneratedColumn<int> typeId = GeneratedColumn<int>(
       'type_id', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES asset_types (id)'));
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES asset_types (id) ON DELETE RESTRICT'));
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -1079,7 +1100,10 @@ class $LiabilitiesTable extends Liabilities
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
   static const VerificationMeta _typeIdMeta = const VerificationMeta('typeId');
   @override
   late final GeneratedColumn<int> typeId = GeneratedColumn<int>(
@@ -1087,7 +1111,7 @@ class $LiabilitiesTable extends Liabilities
       type: DriftSqlType.int,
       requiredDuringInsert: true,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES liability_types (id)'));
+          'REFERENCES liability_types (id) ON DELETE RESTRICT'));
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -1498,13 +1522,16 @@ class $AssetHoldingsTable extends AssetHoldings
       'asset_id', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES assets (id)'));
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES assets (id) ON DELETE CASCADE'));
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
   static const VerificationMeta _priceMeta = const VerificationMeta('price');
   @override
   late final GeneratedColumn<double> price = GeneratedColumn<double>(
@@ -1834,8 +1861,8 @@ class $AssetChangesTable extends AssetChanges
       'asset_id', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES assets (id)'));
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES assets (id) ON DELETE CASCADE'));
   static const VerificationMeta _beforeAmountMeta =
       const VerificationMeta('beforeAmount');
   @override
@@ -1848,18 +1875,14 @@ class $AssetChangesTable extends AssetChanges
   late final GeneratedColumn<double> afterAmount = GeneratedColumn<double>(
       'after_amount', aliasedName, false,
       type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _differenceMeta =
-      const VerificationMeta('difference');
-  @override
-  late final GeneratedColumn<double> difference = GeneratedColumn<double>(
-      'difference', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      clientDefault: () => DateTime.now());
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -1867,7 +1890,7 @@ class $AssetChangesTable extends AssetChanges
       type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, assetId, beforeAmount, afterAmount, difference, createdAt, notes];
+      [id, assetId, beforeAmount, afterAmount, createdAt, notes];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1903,19 +1926,9 @@ class $AssetChangesTable extends AssetChanges
     } else if (isInserting) {
       context.missing(_afterAmountMeta);
     }
-    if (data.containsKey('difference')) {
-      context.handle(
-          _differenceMeta,
-          difference.isAcceptableOrUnknown(
-              data['difference']!, _differenceMeta));
-    } else if (isInserting) {
-      context.missing(_differenceMeta);
-    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    } else if (isInserting) {
-      context.missing(_createdAtMeta);
     }
     if (data.containsKey('notes')) {
       context.handle(
@@ -1938,8 +1951,6 @@ class $AssetChangesTable extends AssetChanges
           .read(DriftSqlType.double, data['${effectivePrefix}before_amount'])!,
       afterAmount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}after_amount'])!,
-      difference: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}difference'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       notes: attachedDatabase.typeMapping
@@ -1958,7 +1969,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
   final int assetId;
   final double beforeAmount;
   final double afterAmount;
-  final double difference;
   final DateTime createdAt;
   final String? notes;
   const AssetChange(
@@ -1966,7 +1976,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
       required this.assetId,
       required this.beforeAmount,
       required this.afterAmount,
-      required this.difference,
       required this.createdAt,
       this.notes});
   @override
@@ -1976,7 +1985,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
     map['asset_id'] = Variable<int>(assetId);
     map['before_amount'] = Variable<double>(beforeAmount);
     map['after_amount'] = Variable<double>(afterAmount);
-    map['difference'] = Variable<double>(difference);
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
@@ -1990,7 +1998,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
       assetId: Value(assetId),
       beforeAmount: Value(beforeAmount),
       afterAmount: Value(afterAmount),
-      difference: Value(difference),
       createdAt: Value(createdAt),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
@@ -2005,7 +2012,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
       assetId: serializer.fromJson<int>(json['assetId']),
       beforeAmount: serializer.fromJson<double>(json['beforeAmount']),
       afterAmount: serializer.fromJson<double>(json['afterAmount']),
-      difference: serializer.fromJson<double>(json['difference']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       notes: serializer.fromJson<String?>(json['notes']),
     );
@@ -2018,7 +2024,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
       'assetId': serializer.toJson<int>(assetId),
       'beforeAmount': serializer.toJson<double>(beforeAmount),
       'afterAmount': serializer.toJson<double>(afterAmount),
-      'difference': serializer.toJson<double>(difference),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'notes': serializer.toJson<String?>(notes),
     };
@@ -2029,7 +2034,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
           int? assetId,
           double? beforeAmount,
           double? afterAmount,
-          double? difference,
           DateTime? createdAt,
           Value<String?> notes = const Value.absent()}) =>
       AssetChange(
@@ -2037,7 +2041,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
         assetId: assetId ?? this.assetId,
         beforeAmount: beforeAmount ?? this.beforeAmount,
         afterAmount: afterAmount ?? this.afterAmount,
-        difference: difference ?? this.difference,
         createdAt: createdAt ?? this.createdAt,
         notes: notes.present ? notes.value : this.notes,
       );
@@ -2050,8 +2053,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
           : this.beforeAmount,
       afterAmount:
           data.afterAmount.present ? data.afterAmount.value : this.afterAmount,
-      difference:
-          data.difference.present ? data.difference.value : this.difference,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       notes: data.notes.present ? data.notes.value : this.notes,
     );
@@ -2064,7 +2065,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
           ..write('assetId: $assetId, ')
           ..write('beforeAmount: $beforeAmount, ')
           ..write('afterAmount: $afterAmount, ')
-          ..write('difference: $difference, ')
           ..write('createdAt: $createdAt, ')
           ..write('notes: $notes')
           ..write(')'))
@@ -2072,8 +2072,8 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, assetId, beforeAmount, afterAmount, difference, createdAt, notes);
+  int get hashCode =>
+      Object.hash(id, assetId, beforeAmount, afterAmount, createdAt, notes);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2082,7 +2082,6 @@ class AssetChange extends DataClass implements Insertable<AssetChange> {
           other.assetId == this.assetId &&
           other.beforeAmount == this.beforeAmount &&
           other.afterAmount == this.afterAmount &&
-          other.difference == this.difference &&
           other.createdAt == this.createdAt &&
           other.notes == this.notes);
 }
@@ -2092,7 +2091,6 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
   final Value<int> assetId;
   final Value<double> beforeAmount;
   final Value<double> afterAmount;
-  final Value<double> difference;
   final Value<DateTime> createdAt;
   final Value<String?> notes;
   const AssetChangesCompanion({
@@ -2100,7 +2098,6 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
     this.assetId = const Value.absent(),
     this.beforeAmount = const Value.absent(),
     this.afterAmount = const Value.absent(),
-    this.difference = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.notes = const Value.absent(),
   });
@@ -2109,20 +2106,16 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
     required int assetId,
     required double beforeAmount,
     required double afterAmount,
-    required double difference,
-    required DateTime createdAt,
+    this.createdAt = const Value.absent(),
     this.notes = const Value.absent(),
   })  : assetId = Value(assetId),
         beforeAmount = Value(beforeAmount),
-        afterAmount = Value(afterAmount),
-        difference = Value(difference),
-        createdAt = Value(createdAt);
+        afterAmount = Value(afterAmount);
   static Insertable<AssetChange> custom({
     Expression<int>? id,
     Expression<int>? assetId,
     Expression<double>? beforeAmount,
     Expression<double>? afterAmount,
-    Expression<double>? difference,
     Expression<DateTime>? createdAt,
     Expression<String>? notes,
   }) {
@@ -2131,7 +2124,6 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
       if (assetId != null) 'asset_id': assetId,
       if (beforeAmount != null) 'before_amount': beforeAmount,
       if (afterAmount != null) 'after_amount': afterAmount,
-      if (difference != null) 'difference': difference,
       if (createdAt != null) 'created_at': createdAt,
       if (notes != null) 'notes': notes,
     });
@@ -2142,7 +2134,6 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
       Value<int>? assetId,
       Value<double>? beforeAmount,
       Value<double>? afterAmount,
-      Value<double>? difference,
       Value<DateTime>? createdAt,
       Value<String?>? notes}) {
     return AssetChangesCompanion(
@@ -2150,7 +2141,6 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
       assetId: assetId ?? this.assetId,
       beforeAmount: beforeAmount ?? this.beforeAmount,
       afterAmount: afterAmount ?? this.afterAmount,
-      difference: difference ?? this.difference,
       createdAt: createdAt ?? this.createdAt,
       notes: notes ?? this.notes,
     );
@@ -2171,9 +2161,6 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
     if (afterAmount.present) {
       map['after_amount'] = Variable<double>(afterAmount.value);
     }
-    if (difference.present) {
-      map['difference'] = Variable<double>(difference.value);
-    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2190,7 +2177,6 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
           ..write('assetId: $assetId, ')
           ..write('beforeAmount: $beforeAmount, ')
           ..write('afterAmount: $afterAmount, ')
-          ..write('difference: $difference, ')
           ..write('createdAt: $createdAt, ')
           ..write('notes: $notes')
           ..write(')'))
@@ -2216,7 +2202,10 @@ class $PersonsTable extends Persons with TableInfo<$PersonsTable, Person> {
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
   static const VerificationMeta _enabledMeta =
       const VerificationMeta('enabled');
   @override
@@ -2232,13 +2221,17 @@ class $PersonsTable extends Persons with TableInfo<$PersonsTable, Person> {
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      clientDefault: () => DateTime.now());
   static const VerificationMeta _updatedAtMeta =
       const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
       'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      clientDefault: () => DateTime.now());
   @override
   List<GeneratedColumn> get $columns =>
       [id, name, enabled, createdAt, updatedAt];
@@ -2268,14 +2261,10 @@ class $PersonsTable extends Persons with TableInfo<$PersonsTable, Person> {
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    } else if (isInserting) {
-      context.missing(_createdAtMeta);
     }
     if (data.containsKey('updated_at')) {
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
     }
     return context;
   }
@@ -2426,11 +2415,9 @@ class PersonsCompanion extends UpdateCompanion<Person> {
     this.id = const Value.absent(),
     required String name,
     this.enabled = const Value.absent(),
-    required DateTime createdAt,
-    required DateTime updatedAt,
-  })  : name = Value(name),
-        createdAt = Value(createdAt),
-        updatedAt = Value(updatedAt);
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  }) : name = Value(name);
   static Insertable<Person> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -2514,7 +2501,10 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -2532,8 +2522,8 @@ class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
       'person_id', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES persons (id)'));
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES persons (id) ON DELETE RESTRICT'));
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
@@ -2900,15 +2890,25 @@ class $SnapshotsTable extends Snapshots
   late final GeneratedColumn<double> netWorth = GeneratedColumn<double>(
       'net_worth', aliasedName, false,
       type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _currencyMeta =
+      const VerificationMeta('currency');
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+      'currency', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('CNY'));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      clientDefault: () => DateTime.now());
   @override
   List<GeneratedColumn> get $columns =>
-      [id, totalAssets, totalLiabilities, netWorth, createdAt];
+      [id, totalAssets, totalLiabilities, netWorth, currency, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2944,11 +2944,13 @@ class $SnapshotsTable extends Snapshots
     } else if (isInserting) {
       context.missing(_netWorthMeta);
     }
+    if (data.containsKey('currency')) {
+      context.handle(_currencyMeta,
+          currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    } else if (isInserting) {
-      context.missing(_createdAtMeta);
     }
     return context;
   }
@@ -2967,6 +2969,8 @@ class $SnapshotsTable extends Snapshots
           DriftSqlType.double, data['${effectivePrefix}total_liabilities'])!,
       netWorth: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}net_worth'])!,
+      currency: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -2983,12 +2987,14 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
   final double totalAssets;
   final double totalLiabilities;
   final double netWorth;
+  final String currency;
   final DateTime createdAt;
   const Snapshot(
       {required this.id,
       required this.totalAssets,
       required this.totalLiabilities,
       required this.netWorth,
+      required this.currency,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2997,6 +3003,7 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
     map['total_assets'] = Variable<double>(totalAssets);
     map['total_liabilities'] = Variable<double>(totalLiabilities);
     map['net_worth'] = Variable<double>(netWorth);
+    map['currency'] = Variable<String>(currency);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -3007,6 +3014,7 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
       totalAssets: Value(totalAssets),
       totalLiabilities: Value(totalLiabilities),
       netWorth: Value(netWorth),
+      currency: Value(currency),
       createdAt: Value(createdAt),
     );
   }
@@ -3019,6 +3027,7 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
       totalAssets: serializer.fromJson<double>(json['totalAssets']),
       totalLiabilities: serializer.fromJson<double>(json['totalLiabilities']),
       netWorth: serializer.fromJson<double>(json['netWorth']),
+      currency: serializer.fromJson<String>(json['currency']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -3030,6 +3039,7 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
       'totalAssets': serializer.toJson<double>(totalAssets),
       'totalLiabilities': serializer.toJson<double>(totalLiabilities),
       'netWorth': serializer.toJson<double>(netWorth),
+      'currency': serializer.toJson<String>(currency),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -3039,12 +3049,14 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
           double? totalAssets,
           double? totalLiabilities,
           double? netWorth,
+          String? currency,
           DateTime? createdAt}) =>
       Snapshot(
         id: id ?? this.id,
         totalAssets: totalAssets ?? this.totalAssets,
         totalLiabilities: totalLiabilities ?? this.totalLiabilities,
         netWorth: netWorth ?? this.netWorth,
+        currency: currency ?? this.currency,
         createdAt: createdAt ?? this.createdAt,
       );
   Snapshot copyWithCompanion(SnapshotsCompanion data) {
@@ -3056,6 +3068,7 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
           ? data.totalLiabilities.value
           : this.totalLiabilities,
       netWorth: data.netWorth.present ? data.netWorth.value : this.netWorth,
+      currency: data.currency.present ? data.currency.value : this.currency,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -3067,14 +3080,15 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
           ..write('totalAssets: $totalAssets, ')
           ..write('totalLiabilities: $totalLiabilities, ')
           ..write('netWorth: $netWorth, ')
+          ..write('currency: $currency, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, totalAssets, totalLiabilities, netWorth, createdAt);
+  int get hashCode => Object.hash(
+      id, totalAssets, totalLiabilities, netWorth, currency, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3083,6 +3097,7 @@ class Snapshot extends DataClass implements Insertable<Snapshot> {
           other.totalAssets == this.totalAssets &&
           other.totalLiabilities == this.totalLiabilities &&
           other.netWorth == this.netWorth &&
+          other.currency == this.currency &&
           other.createdAt == this.createdAt);
 }
 
@@ -3091,12 +3106,14 @@ class SnapshotsCompanion extends UpdateCompanion<Snapshot> {
   final Value<double> totalAssets;
   final Value<double> totalLiabilities;
   final Value<double> netWorth;
+  final Value<String> currency;
   final Value<DateTime> createdAt;
   const SnapshotsCompanion({
     this.id = const Value.absent(),
     this.totalAssets = const Value.absent(),
     this.totalLiabilities = const Value.absent(),
     this.netWorth = const Value.absent(),
+    this.currency = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   SnapshotsCompanion.insert({
@@ -3104,16 +3121,17 @@ class SnapshotsCompanion extends UpdateCompanion<Snapshot> {
     required double totalAssets,
     required double totalLiabilities,
     required double netWorth,
-    required DateTime createdAt,
+    this.currency = const Value.absent(),
+    this.createdAt = const Value.absent(),
   })  : totalAssets = Value(totalAssets),
         totalLiabilities = Value(totalLiabilities),
-        netWorth = Value(netWorth),
-        createdAt = Value(createdAt);
+        netWorth = Value(netWorth);
   static Insertable<Snapshot> custom({
     Expression<int>? id,
     Expression<double>? totalAssets,
     Expression<double>? totalLiabilities,
     Expression<double>? netWorth,
+    Expression<String>? currency,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -3121,6 +3139,7 @@ class SnapshotsCompanion extends UpdateCompanion<Snapshot> {
       if (totalAssets != null) 'total_assets': totalAssets,
       if (totalLiabilities != null) 'total_liabilities': totalLiabilities,
       if (netWorth != null) 'net_worth': netWorth,
+      if (currency != null) 'currency': currency,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -3130,12 +3149,14 @@ class SnapshotsCompanion extends UpdateCompanion<Snapshot> {
       Value<double>? totalAssets,
       Value<double>? totalLiabilities,
       Value<double>? netWorth,
+      Value<String>? currency,
       Value<DateTime>? createdAt}) {
     return SnapshotsCompanion(
       id: id ?? this.id,
       totalAssets: totalAssets ?? this.totalAssets,
       totalLiabilities: totalLiabilities ?? this.totalLiabilities,
       netWorth: netWorth ?? this.netWorth,
+      currency: currency ?? this.currency,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -3155,6 +3176,9 @@ class SnapshotsCompanion extends UpdateCompanion<Snapshot> {
     if (netWorth.present) {
       map['net_worth'] = Variable<double>(netWorth.value);
     }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3168,6 +3192,7 @@ class SnapshotsCompanion extends UpdateCompanion<Snapshot> {
           ..write('totalAssets: $totalAssets, ')
           ..write('totalLiabilities: $totalLiabilities, ')
           ..write('netWorth: $netWorth, ')
+          ..write('currency: $currency, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -3201,6 +3226,25 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         expenses,
         snapshots
       ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
+        [
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('assets',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('asset_holdings', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('assets',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('asset_changes', kind: UpdateKind.delete),
+            ],
+          ),
+        ],
+      );
 }
 
 typedef $$AssetTypesTableCreateCompanionBuilder = AssetTypesCompanion Function({
@@ -3208,14 +3252,14 @@ typedef $$AssetTypesTableCreateCompanionBuilder = AssetTypesCompanion Function({
   required String code,
   required String label,
   Value<bool> enabled,
-  Value<int> order,
+  Value<int> sortOrder,
 });
 typedef $$AssetTypesTableUpdateCompanionBuilder = AssetTypesCompanion Function({
   Value<int> id,
   Value<String> code,
   Value<String> label,
   Value<bool> enabled,
-  Value<int> order,
+  Value<int> sortOrder,
 });
 
 final class $$AssetTypesTableReferences
@@ -3258,8 +3302,8 @@ class $$AssetTypesTableFilterComposer
   ColumnFilters<bool> get enabled => $composableBuilder(
       column: $table.enabled, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get order => $composableBuilder(
-      column: $table.order, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnFilters(column));
 
   Expression<bool> assetsRefs(
       Expression<bool> Function($$AssetsTableFilterComposer f) f) {
@@ -3304,8 +3348,8 @@ class $$AssetTypesTableOrderingComposer
   ColumnOrderings<bool> get enabled => $composableBuilder(
       column: $table.enabled, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get order => $composableBuilder(
-      column: $table.order, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnOrderings(column));
 }
 
 class $$AssetTypesTableAnnotationComposer
@@ -3329,8 +3373,8 @@ class $$AssetTypesTableAnnotationComposer
   GeneratedColumn<bool> get enabled =>
       $composableBuilder(column: $table.enabled, builder: (column) => column);
 
-  GeneratedColumn<int> get order =>
-      $composableBuilder(column: $table.order, builder: (column) => column);
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 
   Expression<T> assetsRefs<T extends Object>(
       Expression<T> Function($$AssetsTableAnnotationComposer a) f) {
@@ -3381,28 +3425,28 @@ class $$AssetTypesTableTableManager extends RootTableManager<
             Value<String> code = const Value.absent(),
             Value<String> label = const Value.absent(),
             Value<bool> enabled = const Value.absent(),
-            Value<int> order = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
           }) =>
               AssetTypesCompanion(
             id: id,
             code: code,
             label: label,
             enabled: enabled,
-            order: order,
+            sortOrder: sortOrder,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String code,
             required String label,
             Value<bool> enabled = const Value.absent(),
-            Value<int> order = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
           }) =>
               AssetTypesCompanion.insert(
             id: id,
             code: code,
             label: label,
             enabled: enabled,
-            order: order,
+            sortOrder: sortOrder,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -3455,7 +3499,7 @@ typedef $$LiabilityTypesTableCreateCompanionBuilder = LiabilityTypesCompanion
   required String code,
   required String label,
   Value<bool> enabled,
-  Value<int> order,
+  Value<int> sortOrder,
 });
 typedef $$LiabilityTypesTableUpdateCompanionBuilder = LiabilityTypesCompanion
     Function({
@@ -3463,7 +3507,7 @@ typedef $$LiabilityTypesTableUpdateCompanionBuilder = LiabilityTypesCompanion
   Value<String> code,
   Value<String> label,
   Value<bool> enabled,
-  Value<int> order,
+  Value<int> sortOrder,
 });
 
 final class $$LiabilityTypesTableReferences
@@ -3508,8 +3552,8 @@ class $$LiabilityTypesTableFilterComposer
   ColumnFilters<bool> get enabled => $composableBuilder(
       column: $table.enabled, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get order => $composableBuilder(
-      column: $table.order, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnFilters(column));
 
   Expression<bool> liabilitiesRefs(
       Expression<bool> Function($$LiabilitiesTableFilterComposer f) f) {
@@ -3554,8 +3598,8 @@ class $$LiabilityTypesTableOrderingComposer
   ColumnOrderings<bool> get enabled => $composableBuilder(
       column: $table.enabled, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get order => $composableBuilder(
-      column: $table.order, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+      column: $table.sortOrder, builder: (column) => ColumnOrderings(column));
 }
 
 class $$LiabilityTypesTableAnnotationComposer
@@ -3579,8 +3623,8 @@ class $$LiabilityTypesTableAnnotationComposer
   GeneratedColumn<bool> get enabled =>
       $composableBuilder(column: $table.enabled, builder: (column) => column);
 
-  GeneratedColumn<int> get order =>
-      $composableBuilder(column: $table.order, builder: (column) => column);
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 
   Expression<T> liabilitiesRefs<T extends Object>(
       Expression<T> Function($$LiabilitiesTableAnnotationComposer a) f) {
@@ -3632,28 +3676,28 @@ class $$LiabilityTypesTableTableManager extends RootTableManager<
             Value<String> code = const Value.absent(),
             Value<String> label = const Value.absent(),
             Value<bool> enabled = const Value.absent(),
-            Value<int> order = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
           }) =>
               LiabilityTypesCompanion(
             id: id,
             code: code,
             label: label,
             enabled: enabled,
-            order: order,
+            sortOrder: sortOrder,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String code,
             required String label,
             Value<bool> enabled = const Value.absent(),
-            Value<int> order = const Value.absent(),
+            Value<int> sortOrder = const Value.absent(),
           }) =>
               LiabilityTypesCompanion.insert(
             id: id,
             code: code,
             label: label,
             enabled: enabled,
-            order: order,
+            sortOrder: sortOrder,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -4777,8 +4821,7 @@ typedef $$AssetChangesTableCreateCompanionBuilder = AssetChangesCompanion
   required int assetId,
   required double beforeAmount,
   required double afterAmount,
-  required double difference,
-  required DateTime createdAt,
+  Value<DateTime> createdAt,
   Value<String?> notes,
 });
 typedef $$AssetChangesTableUpdateCompanionBuilder = AssetChangesCompanion
@@ -4787,7 +4830,6 @@ typedef $$AssetChangesTableUpdateCompanionBuilder = AssetChangesCompanion
   Value<int> assetId,
   Value<double> beforeAmount,
   Value<double> afterAmount,
-  Value<double> difference,
   Value<DateTime> createdAt,
   Value<String?> notes,
 });
@@ -4828,9 +4870,6 @@ class $$AssetChangesTableFilterComposer
 
   ColumnFilters<double> get afterAmount => $composableBuilder(
       column: $table.afterAmount, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get difference => $composableBuilder(
-      column: $table.difference, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -4878,9 +4917,6 @@ class $$AssetChangesTableOrderingComposer
   ColumnOrderings<double> get afterAmount => $composableBuilder(
       column: $table.afterAmount, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get difference => $composableBuilder(
-      column: $table.difference, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -4925,9 +4961,6 @@ class $$AssetChangesTableAnnotationComposer
 
   GeneratedColumn<double> get afterAmount => $composableBuilder(
       column: $table.afterAmount, builder: (column) => column);
-
-  GeneratedColumn<double> get difference => $composableBuilder(
-      column: $table.difference, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -4983,7 +5016,6 @@ class $$AssetChangesTableTableManager extends RootTableManager<
             Value<int> assetId = const Value.absent(),
             Value<double> beforeAmount = const Value.absent(),
             Value<double> afterAmount = const Value.absent(),
-            Value<double> difference = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<String?> notes = const Value.absent(),
           }) =>
@@ -4992,7 +5024,6 @@ class $$AssetChangesTableTableManager extends RootTableManager<
             assetId: assetId,
             beforeAmount: beforeAmount,
             afterAmount: afterAmount,
-            difference: difference,
             createdAt: createdAt,
             notes: notes,
           ),
@@ -5001,8 +5032,7 @@ class $$AssetChangesTableTableManager extends RootTableManager<
             required int assetId,
             required double beforeAmount,
             required double afterAmount,
-            required double difference,
-            required DateTime createdAt,
+            Value<DateTime> createdAt = const Value.absent(),
             Value<String?> notes = const Value.absent(),
           }) =>
               AssetChangesCompanion.insert(
@@ -5010,7 +5040,6 @@ class $$AssetChangesTableTableManager extends RootTableManager<
             assetId: assetId,
             beforeAmount: beforeAmount,
             afterAmount: afterAmount,
-            difference: difference,
             createdAt: createdAt,
             notes: notes,
           ),
@@ -5074,8 +5103,8 @@ typedef $$PersonsTableCreateCompanionBuilder = PersonsCompanion Function({
   Value<int> id,
   required String name,
   Value<bool> enabled,
-  required DateTime createdAt,
-  required DateTime updatedAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
 });
 typedef $$PersonsTableUpdateCompanionBuilder = PersonsCompanion Function({
   Value<int> id,
@@ -5261,8 +5290,8 @@ class $$PersonsTableTableManager extends RootTableManager<
             Value<int> id = const Value.absent(),
             required String name,
             Value<bool> enabled = const Value.absent(),
-            required DateTime createdAt,
-            required DateTime updatedAt,
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
           }) =>
               PersonsCompanion.insert(
             id: id,
@@ -5612,13 +5641,15 @@ typedef $$SnapshotsTableCreateCompanionBuilder = SnapshotsCompanion Function({
   required double totalAssets,
   required double totalLiabilities,
   required double netWorth,
-  required DateTime createdAt,
+  Value<String> currency,
+  Value<DateTime> createdAt,
 });
 typedef $$SnapshotsTableUpdateCompanionBuilder = SnapshotsCompanion Function({
   Value<int> id,
   Value<double> totalAssets,
   Value<double> totalLiabilities,
   Value<double> netWorth,
+  Value<String> currency,
   Value<DateTime> createdAt,
 });
 
@@ -5643,6 +5674,9 @@ class $$SnapshotsTableFilterComposer
 
   ColumnFilters<double> get netWorth => $composableBuilder(
       column: $table.netWorth, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -5670,6 +5704,9 @@ class $$SnapshotsTableOrderingComposer
   ColumnOrderings<double> get netWorth => $composableBuilder(
       column: $table.netWorth, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
@@ -5694,6 +5731,9 @@ class $$SnapshotsTableAnnotationComposer
 
   GeneratedColumn<double> get netWorth =>
       $composableBuilder(column: $table.netWorth, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5726,6 +5766,7 @@ class $$SnapshotsTableTableManager extends RootTableManager<
             Value<double> totalAssets = const Value.absent(),
             Value<double> totalLiabilities = const Value.absent(),
             Value<double> netWorth = const Value.absent(),
+            Value<String> currency = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               SnapshotsCompanion(
@@ -5733,6 +5774,7 @@ class $$SnapshotsTableTableManager extends RootTableManager<
             totalAssets: totalAssets,
             totalLiabilities: totalLiabilities,
             netWorth: netWorth,
+            currency: currency,
             createdAt: createdAt,
           ),
           createCompanionCallback: ({
@@ -5740,13 +5782,15 @@ class $$SnapshotsTableTableManager extends RootTableManager<
             required double totalAssets,
             required double totalLiabilities,
             required double netWorth,
-            required DateTime createdAt,
+            Value<String> currency = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
           }) =>
               SnapshotsCompanion.insert(
             id: id,
             totalAssets: totalAssets,
             totalLiabilities: totalLiabilities,
             netWorth: netWorth,
+            currency: currency,
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
