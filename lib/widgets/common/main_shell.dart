@@ -24,7 +24,7 @@ class MainShell extends StatelessWidget {
       case 3:
         context.go('/expenses');
       case 4:
-        context.go('/types');
+        context.go('/settings');
     }
   }
 

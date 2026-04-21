@@ -8,14 +8,11 @@ import 'screens/assets/asset_detail_screen.dart';
 import 'screens/assets/asset_list_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/expenses/expense_list_screen.dart';
 import 'screens/liabilities/liability_list_screen.dart';
+import 'screens/settings/settings_screen.dart';
+import 'screens/types/types_management_screen.dart';
 import 'widgets/common/main_shell.dart';
-import 'widgets/common/placeholder_screen.dart';
-
-// Placeholder screens for phases not yet implemented
-const _expensesPlaceholder = PlaceholderScreen(title: '支出');
-const _typesPlaceholder = PlaceholderScreen(title: '类型管理');
-const _settingsPlaceholder = PlaceholderScreen(title: '设置');
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -53,9 +50,9 @@ class _AppState extends ConsumerState<App> {
               },
             ),
             GoRoute(path: '/liabilities', builder: (_, __) => const LiabilityListScreen()),
-            GoRoute(path: '/expenses', builder: (_, __) => _expensesPlaceholder),
-            GoRoute(path: '/types', builder: (_, __) => _typesPlaceholder),
-            GoRoute(path: '/settings', builder: (_, __) => _settingsPlaceholder),
+            GoRoute(path: '/expenses', builder: (_, __) => const ExpenseListScreen()),
+            GoRoute(path: '/types', builder: (_, __) => const TypesManagementScreen()),
+            GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
           ],
         ),
       ],
