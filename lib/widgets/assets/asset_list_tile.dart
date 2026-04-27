@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/person_color.dart';
 import '../../data/models/asset.dart';
 import '../common/app_card.dart';
 
 class AssetListTile extends StatelessWidget {
   final Asset asset;
   final String typeName;
+  final String? personName;  // optional — shown as a coloured tag
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -16,6 +18,7 @@ class AssetListTile extends StatelessWidget {
     super.key,
     required this.asset,
     required this.typeName,
+    this.personName,
     this.onTap,
     this.onEdit,
     this.onDelete,
@@ -23,10 +26,16 @@ class AssetListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final personColor = PersonColors.forId(asset.personId);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GlassCard(
         padding: EdgeInsets.zero,
+        // Subtle left-border glow in the person's color when assigned
+        borderColor: asset.personId != null
+            ? PersonColors.borderForId(asset.personId)
+            : null,
         onTap: onTap,
         child: InkWell(
           onTap: onTap,
@@ -35,27 +44,33 @@ class AssetListTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
-                // Icon
+                // Icon badge — tinted in person color when assigned
                 Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGlow,
+                    color: asset.personId != null
+                        ? PersonColors.bgForId(asset.personId)
+                        : AppColors.primaryGlow,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: asset.personId != null
+                          ? personColor.withValues(alpha: 0.3)
+                          : AppColors.primary.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.account_balance_wallet_rounded,
-                    color: AppColors.primary,
+                    color: asset.personId != null
+                        ? personColor
+                        : AppColors.primary,
                     size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
 
-                // Name + type
+                // Name + meta row
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,26 +86,14 @@ class AssetListTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
-                      Row(
+                      Wrap(
+                        spacing: 5,
+                        runSpacing: 3,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: AppColors.glass,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                  color: AppColors.glassBorder, width: 0.5),
-                            ),
-                            child: Text(
-                              typeName,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
+                          // Type chip
+                          _Tag(label: typeName),
+                          // Date
                           Text(
                             formatDate(asset.valuationDate),
                             style: const TextStyle(
@@ -98,13 +101,19 @@ class AssetListTile extends StatelessWidget {
                               color: AppColors.textMuted,
                             ),
                           ),
+                          // Person chip (coloured)
+                          if (personName != null)
+                            _Tag(
+                              label: personName!,
+                              color: personColor,
+                            ),
                         ],
                       ),
                     ],
                   ),
                 ),
 
-                // Amount + actions
+                // Amount + annual rate
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -143,7 +152,7 @@ class AssetListTile extends StatelessWidget {
                           child: Row(children: [
                             Icon(Icons.edit_outlined, size: 16),
                             SizedBox(width: 8),
-                            Text('编辑')
+                            Text('编辑'),
                           ]),
                         ),
                       if (onDelete != null)
@@ -154,7 +163,7 @@ class AssetListTile extends StatelessWidget {
                                 size: 16, color: Colors.red),
                             SizedBox(width: 8),
                             Text('删除',
-                                style: TextStyle(color: Colors.red))
+                                style: TextStyle(color: Colors.red)),
                           ]),
                         ),
                     ],
@@ -162,6 +171,37 @@ class AssetListTile extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Tag extends StatelessWidget {
+  final String label;
+  final Color? color; // when null uses default glass style
+
+  const _Tag({required this.label, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: c != null ? c.withValues(alpha: 0.12) : AppColors.glass,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: c != null ? c.withValues(alpha: 0.4) : AppColors.glassBorder,
+          width: 0.5,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: c ?? AppColors.textSecondary,
+          fontWeight: c != null ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
     );

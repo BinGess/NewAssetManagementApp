@@ -5,6 +5,8 @@ import '../../core/utils/validators.dart';
 import '../../data/models/asset.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../common/bottom_sheet_picker.dart';
+import '../common/form_sheet.dart';
 
 class AssetForm extends ConsumerStatefulWidget {
   final Asset? initialAsset; // null = create, non-null = edit
@@ -33,6 +35,7 @@ class _AssetFormState extends ConsumerState<AssetForm> {
   String _currency = 'CNY';
   DateTime _valuationDate = DateTime.now();
   DateTime? _startDate;
+  int? _selectedPersonId;
   bool _isSubmitting = false;
 
   @override
@@ -43,6 +46,7 @@ class _AssetFormState extends ConsumerState<AssetForm> {
       _currency = widget.initialAsset!.currency;
       _valuationDate = widget.initialAsset!.valuationDate;
       _startDate = widget.initialAsset!.startDate;
+      _selectedPersonId = widget.initialAsset!.personId;
     }
     _annualRateCtrl.addListener(() => setState(() {}));
   }
@@ -58,12 +62,6 @@ class _AssetFormState extends ConsumerState<AssetForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedTypeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请选择资产类型')),
-      );
-      return;
-    }
 
     setState(() => _isSubmitting = true);
     try {
@@ -72,10 +70,9 @@ class _AssetFormState extends ConsumerState<AssetForm> {
       final amount = double.parse(_amountCtrl.text.trim());
       final annualRate = _annualRateCtrl.text.trim().isEmpty
           ? null
-          : double.parse(_annualRateCtrl.text.trim()) / 100; // convert % to decimal
+          : double.parse(_annualRateCtrl.text.trim()) / 100;
 
       if (widget.initialAsset == null) {
-        // Create
         await repo.insert(
           name: _nameCtrl.text.trim(),
           typeId: _selectedTypeId!,
@@ -85,9 +82,9 @@ class _AssetFormState extends ConsumerState<AssetForm> {
           annualRate: annualRate,
           startDate: _startDate,
           notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+          personId: _selectedPersonId,
         );
       } else {
-        // Edit
         await repo.updateWithChangeTracking(
           widget.initialAsset!.copyWith(
             name: _nameCtrl.text.trim(),
@@ -98,6 +95,7 @@ class _AssetFormState extends ConsumerState<AssetForm> {
             annualRate: annualRate,
             startDate: _startDate,
             notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+            personId: _selectedPersonId,
           ),
         );
       }
@@ -139,26 +137,20 @@ class _AssetFormState extends ConsumerState<AssetForm> {
   @override
   Widget build(BuildContext context) {
     final assetTypesAsync = ref.watch(assetTypesStreamProvider);
+    final personsAsync = ref.watch(personsStreamProvider);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-        top: AppSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
-      ),
+    return FormSheet(
       child: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                widget.initialAsset == null ? '添加资产' : '编辑资产',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.md),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              widget.initialAsset == null ? '添加资产' : '编辑资产',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppSpacing.md),
 
               // Name
               TextFormField(
@@ -168,20 +160,23 @@ class _AssetFormState extends ConsumerState<AssetForm> {
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              // Type dropdown
+              // Asset Type — bottom sheet picker
               assetTypesAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (_, __) => const Text('加载类型失败'),
-                data: (types) => DropdownButtonFormField<int>(
-                  initialValue: _selectedTypeId,
-                  decoration: const InputDecoration(labelText: '资产类型 *'),
-                  items: types
-                      .where((t) => t.enabled)
-                      .map((t) => DropdownMenuItem(value: t.id, child: Text(t.label)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedTypeId = v),
-                  validator: (v) => v == null ? '请选择资产类型' : null,
-                ),
+                data: (types) {
+                  final enabledTypes = types.where((t) => t.enabled).toList();
+                  return BottomSheetPicker<int>(
+                    label: '资产类型 *',
+                    selectedValue: _selectedTypeId,
+                    options: enabledTypes
+                        .map((t) => PickerOption(value: t.id, label: t.label))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedTypeId = v),
+                    validator: (v) => v == null ? '请选择资产类型' : null,
+                    emptyHint: '请选择资产类型',
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.sm),
 
@@ -194,24 +189,51 @@ class _AssetFormState extends ConsumerState<AssetForm> {
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              // Currency
-              DropdownButtonFormField<String>(
-                initialValue: _currency,
-                decoration: const InputDecoration(labelText: '币种'),
-                items: const [
-                  DropdownMenuItem(value: 'CNY', child: Text('人民币 (CNY)')),
-                  DropdownMenuItem(value: 'USD', child: Text('美元 (USD)')),
-                  DropdownMenuItem(value: 'HKD', child: Text('港元 (HKD)')),
+              // Currency — bottom sheet picker
+              BottomSheetPicker<String>(
+                label: '币种',
+                selectedValue: _currency,
+                options: const [
+                  PickerOption(value: 'CNY', label: '人民币 (CNY)'),
+                  PickerOption(value: 'USD', label: '美元 (USD)'),
+                  PickerOption(value: 'HKD', label: '港元 (HKD)'),
                 ],
                 onChanged: (v) => setState(() => _currency = v ?? 'CNY'),
+                emptyHint: '请选择币种',
               ),
               const SizedBox(height: AppSpacing.sm),
+
+              // Person — bottom sheet picker (optional)
+              personsAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (persons) {
+                  final enabledPersons = persons.where((p) => p.enabled).toList();
+                  if (enabledPersons.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    children: [
+                      BottomSheetPicker<int>(
+                        label: '所属人员（可选）',
+                        selectedValue: _selectedPersonId,
+                        options: enabledPersons
+                            .map((p) => PickerOption(value: p.id, label: p.name))
+                            .toList(),
+                        onChanged: (v) => setState(() => _selectedPersonId = v),
+                        clearable: true,
+                        emptyHint: '未指定人员',
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                  );
+                },
+              ),
 
               // Valuation Date
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('估值日期'),
-                subtitle: Text('${_valuationDate.year}-${_valuationDate.month.toString().padLeft(2, '0')}-${_valuationDate.day.toString().padLeft(2, '0')}'),
+                subtitle: Text(
+                    '${_valuationDate.year}-${_valuationDate.month.toString().padLeft(2, '0')}-${_valuationDate.day.toString().padLeft(2, '0')}'),
                 trailing: const Icon(Icons.calendar_today_outlined),
                 onTap: () => _pickDate(isStartDate: false),
               ),
@@ -252,13 +274,15 @@ class _AssetFormState extends ConsumerState<AssetForm> {
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submit,
                 child: _isSubmitting
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(widget.initialAsset == null ? '添加' : '保存'),
               ),
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

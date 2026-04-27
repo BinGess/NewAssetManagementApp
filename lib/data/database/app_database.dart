@@ -30,13 +30,20 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
           await _seedDefaultData();
+        },
+        onUpgrade: (m, from, to) async {
+          // v1 → v2: add personId column to assets and liabilities
+          if (from < 2) {
+            await m.addColumn(assets, assets.personId);
+            await m.addColumn(liabilities, liabilities.personId);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');

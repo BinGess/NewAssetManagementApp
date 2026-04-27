@@ -29,6 +29,7 @@ class LiabilityRepository {
     double? interestRate,
     DateTime? dueDate,
     String? notes,
+    int? personId,
   }) {
     return _db.into(_db.liabilities).insert(LiabilitiesCompanion(
           name: Value(name),
@@ -38,6 +39,7 @@ class LiabilityRepository {
           interestRate: Value(interestRate),
           dueDate: Value(dueDate),
           notes: Value(notes),
+          personId: Value(personId),
         ));
   }
 
@@ -52,6 +54,7 @@ class LiabilityRepository {
           interestRate: Value(updated.interestRate),
           dueDate: Value(updated.dueDate),
           notes: Value(updated.notes),
+          personId: Value(updated.personId),
         ));
   }
 
@@ -68,5 +71,6 @@ class LiabilityRepository {
         interestRate: row.interestRate,
         dueDate: row.dueDate,
         notes: row.notes,
+        personId: row.personId,
       );
 }

@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/person_color.dart';
 import '../../data/models/asset.dart';
 import '../../data/models/asset_change.dart';
 import '../../data/models/asset_holding.dart';
@@ -26,8 +27,13 @@ class AssetDetailScreen extends ConsumerWidget {
     final assetsAsync = ref.watch(assetsStreamProvider);
     final holdingsAsync = ref.watch(assetHoldingsProvider(assetId));
     final changesAsync = ref.watch(assetChangesProvider(assetId));
+    final personsAsync = ref.watch(personsStreamProvider);
 
     final asset = assetsAsync.valueOrNull?.where((a) => a.id == assetId).firstOrNull;
+    final personMap = personsAsync.valueOrNull
+            ?.fold<Map<int, String>>({}, (m, p) => m..[p.id] = p.name) ??
+        {};
+    final personName = asset?.personId != null ? personMap[asset!.personId] : null;
 
     if (assetsAsync.isLoading) return const Scaffold(body: AppLoading());
     if (asset == null) {
@@ -47,9 +53,7 @@ class AssetDetailScreen extends ConsumerWidget {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
+                backgroundColor: Colors.transparent,
                 builder: (_) => AssetForm(initialAsset: asset),
               );
             },
@@ -63,7 +67,7 @@ class AssetDetailScreen extends ConsumerWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // --- Header Card ---
-                _HeaderCard(asset: asset),
+                _HeaderCard(asset: asset, personName: personName),
                 const SizedBox(height: AppSpacing.md),
 
                 // --- Earnings Card (only if annualRate is set) ---
@@ -90,20 +94,58 @@ class AssetDetailScreen extends ConsumerWidget {
 
 class _HeaderCard extends StatelessWidget {
   final Asset asset;
-  const _HeaderCard({required this.asset});
+  final String? personName;
+  const _HeaderCard({required this.asset, this.personName});
 
   @override
   Widget build(BuildContext context) {
+    final personColor = PersonColors.forId(asset.personId);
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            formatCNY(asset.amount),
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.assetColor,
-                  fontWeight: FontWeight.bold,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  formatCNY(asset.amount),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: AppColors.assetColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
+              ),
+              // Person badge
+              if (personName != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: personColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: personColor.withValues(alpha: 0.4), width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.person_outline_rounded,
+                          size: 13, color: personColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        personName!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: personColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(

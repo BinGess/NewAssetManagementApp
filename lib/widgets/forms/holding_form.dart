@@ -4,6 +4,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/asset_holding.dart';
 import '../../providers/repository_providers.dart';
+import '../common/form_sheet.dart';
 
 class HoldingForm extends ConsumerStatefulWidget {
   final int assetId;
@@ -71,20 +72,13 @@ class _HoldingFormState extends ConsumerState<HoldingForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-        top: AppSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
-      ),
+    return FormSheet(
       child: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
               Text(widget.initialHolding == null ? '添加持仓' : '编辑持仓',
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: AppSpacing.md),
@@ -123,7 +117,6 @@ class _HoldingFormState extends ConsumerState<HoldingForm> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

@@ -28,9 +28,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (_) => ExpenseForm(initialExpense: expense),
     );
   }

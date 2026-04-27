@@ -6,6 +6,8 @@ import '../../core/utils/validators.dart';
 import '../../data/models/liability.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../common/bottom_sheet_picker.dart';
+import '../common/form_sheet.dart';
 
 class LiabilityForm extends ConsumerStatefulWidget {
   final Liability? initialLiability;
@@ -32,6 +34,7 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
   int? _selectedTypeId;
   String _currency = 'CNY';
   DateTime? _dueDate;
+  int? _selectedPersonId;
   bool _isSubmitting = false;
 
   @override
@@ -41,6 +44,7 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
       _selectedTypeId = widget.initialLiability!.typeId;
       _currency = widget.initialLiability!.currency;
       _dueDate = widget.initialLiability!.dueDate;
+      _selectedPersonId = widget.initialLiability!.personId;
     }
   }
 
@@ -55,12 +59,6 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedTypeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请选择负债类型')),
-      );
-      return;
-    }
     setState(() => _isSubmitting = true);
     try {
       final repo = ref.read(liabilityRepositoryProvider);
@@ -79,6 +77,7 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
           interestRate: interestRate,
           dueDate: _dueDate,
           notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+          personId: _selectedPersonId,
         );
       } else {
         await repo.update(widget.initialLiability!.copyWith(
@@ -89,6 +88,7 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
           interestRate: interestRate,
           dueDate: _dueDate,
           notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+          personId: _selectedPersonId,
         ));
       }
       await service.recordSnapshot();
@@ -107,21 +107,15 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
   @override
   Widget build(BuildContext context) {
     final liabilityTypesAsync = ref.watch(liabilityTypesStreamProvider);
+    final personsAsync = ref.watch(personsStreamProvider);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-        top: AppSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
-      ),
+    return FormSheet(
       child: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
               Text(
                 widget.initialLiability == null ? '添加负债' : '编辑负债',
                 style: Theme.of(context).textTheme.titleLarge,
@@ -136,20 +130,23 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              // Type
+              // Liability Type — bottom sheet picker
               liabilityTypesAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (_, __) => const Text('加载类型失败'),
-                data: (types) => DropdownButtonFormField<int>(
-                  initialValue: _selectedTypeId,
-                  decoration: const InputDecoration(labelText: '负债类型 *'),
-                  items: types
-                      .where((t) => t.enabled)
-                      .map((t) => DropdownMenuItem(value: t.id, child: Text(t.label)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedTypeId = v),
-                  validator: (v) => v == null ? '请选择负债类型' : null,
-                ),
+                data: (types) {
+                  final enabledTypes = types.where((t) => t.enabled).toList();
+                  return BottomSheetPicker<int>(
+                    label: '负债类型 *',
+                    selectedValue: _selectedTypeId,
+                    options: enabledTypes
+                        .map((t) => PickerOption(value: t.id, label: t.label))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedTypeId = v),
+                    validator: (v) => v == null ? '请选择负债类型' : null,
+                    emptyHint: '请选择负债类型',
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.sm),
 
@@ -162,18 +159,44 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              // Currency
-              DropdownButtonFormField<String>(
-                initialValue: _currency,
-                decoration: const InputDecoration(labelText: '币种'),
-                items: const [
-                  DropdownMenuItem(value: 'CNY', child: Text('人民币 (CNY)')),
-                  DropdownMenuItem(value: 'USD', child: Text('美元 (USD)')),
-                  DropdownMenuItem(value: 'HKD', child: Text('港元 (HKD)')),
+              // Currency — bottom sheet picker
+              BottomSheetPicker<String>(
+                label: '币种',
+                selectedValue: _currency,
+                options: const [
+                  PickerOption(value: 'CNY', label: '人民币 (CNY)'),
+                  PickerOption(value: 'USD', label: '美元 (USD)'),
+                  PickerOption(value: 'HKD', label: '港元 (HKD)'),
                 ],
                 onChanged: (v) => setState(() => _currency = v ?? 'CNY'),
+                emptyHint: '请选择币种',
               ),
               const SizedBox(height: AppSpacing.sm),
+
+              // Person — bottom sheet picker (optional)
+              personsAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (persons) {
+                  final enabledPersons = persons.where((p) => p.enabled).toList();
+                  if (enabledPersons.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    children: [
+                      BottomSheetPicker<int>(
+                        label: '所属人员（可选）',
+                        selectedValue: _selectedPersonId,
+                        options: enabledPersons
+                            .map((p) => PickerOption(value: p.id, label: p.name))
+                            .toList(),
+                        onChanged: (v) => setState(() => _selectedPersonId = v),
+                        clearable: true,
+                        emptyHint: '未指定人员',
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                  );
+                },
+              ),
 
               // Interest Rate (optional)
               TextFormField(
@@ -226,13 +249,15 @@ class _LiabilityFormState extends ConsumerState<LiabilityForm> {
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submit,
                 child: _isSubmitting
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(widget.initialLiability == null ? '添加' : '保存'),
               ),
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

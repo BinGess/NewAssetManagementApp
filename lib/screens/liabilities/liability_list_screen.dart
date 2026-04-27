@@ -17,9 +17,7 @@ class LiabilityListScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (_) => LiabilityForm(initialLiability: liability),
     );
   }
@@ -28,6 +26,7 @@ class LiabilityListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final liabilitiesAsync = ref.watch(liabilitiesStreamProvider);
     final liabilityTypesAsync = ref.watch(liabilityTypesStreamProvider);
+    final personsAsync = ref.watch(personsStreamProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('负债管理')),
@@ -53,6 +52,9 @@ class LiabilityListScreen extends ConsumerWidget {
 
           final typeMap = liabilityTypesAsync.valueOrNull
                   ?.fold<Map<int, String>>({}, (m, t) => m..[t.id] = t.label) ??
+              {};
+          final personMap = personsAsync.valueOrNull
+                  ?.fold<Map<int, String>>({}, (m, p) => m..[p.id] = p.name) ??
               {};
 
           // Summary card
@@ -104,6 +106,9 @@ class LiabilityListScreen extends ConsumerWidget {
                     return LiabilityListTile(
                       liability: liability,
                       typeName: typeMap[liability.typeId] ?? '未知类型',
+                      personName: liability.personId != null
+                          ? personMap[liability.personId]
+                          : null,
                       onEdit: () => _showForm(context, liability: liability),
                       onDelete: () async {
                         final confirmed = await showConfirmDialog(

@@ -57,10 +57,7 @@ class _AppState extends ConsumerState<App> {
         ),
       ],
       redirect: (context, state) {
-        final isLoggedIn = ref.read(authProvider);
-        final isGoingToLogin = state.matchedLocation == '/login';
-        if (!isLoggedIn && !isGoingToLogin) return '/login';
-        if (isLoggedIn && isGoingToLogin) return '/';
+        // Auth disabled — no redirect needed
         return null;
       },
       refreshListenable: _authListenable,

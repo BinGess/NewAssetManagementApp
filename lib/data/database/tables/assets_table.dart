@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'asset_types_table.dart';
+import 'persons_table.dart';
 
 class Assets extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -12,4 +13,8 @@ class Assets extends Table {
   RealColumn get annualRate => real().nullable()();
   DateTimeColumn get startDate => dateTime().nullable()();
   TextColumn get notes => text().nullable()();
+  // v2: person attribution (nullable — assets without a specific owner)
+  IntColumn get personId => integer()
+      .nullable()
+      .references(Persons, #id, onDelete: KeyAction.setNull)();
 }

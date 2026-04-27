@@ -615,6 +615,305 @@ class LiabilityTypesCompanion extends UpdateCompanion<LiabilityType> {
   }
 }
 
+class $PersonsTable extends Persons with TableInfo<$PersonsTable, Person> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PersonsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _enabledMeta =
+      const VerificationMeta('enabled');
+  @override
+  late final GeneratedColumn<bool> enabled = GeneratedColumn<bool>(
+      'enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("enabled" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      clientDefault: () => DateTime.now());
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      clientDefault: () => DateTime.now());
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, enabled, createdAt, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'persons';
+  @override
+  VerificationContext validateIntegrity(Insertable<Person> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('enabled')) {
+      context.handle(_enabledMeta,
+          enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Person map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Person(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      enabled: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}enabled'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $PersonsTable createAlias(String alias) {
+    return $PersonsTable(attachedDatabase, alias);
+  }
+}
+
+class Person extends DataClass implements Insertable<Person> {
+  final int id;
+  final String name;
+  final bool enabled;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const Person(
+      {required this.id,
+      required this.name,
+      required this.enabled,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['enabled'] = Variable<bool>(enabled);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  PersonsCompanion toCompanion(bool nullToAbsent) {
+    return PersonsCompanion(
+      id: Value(id),
+      name: Value(name),
+      enabled: Value(enabled),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory Person.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Person(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      enabled: serializer.fromJson<bool>(json['enabled']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'enabled': serializer.toJson<bool>(enabled),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  Person copyWith(
+          {int? id,
+          String? name,
+          bool? enabled,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      Person(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        enabled: enabled ?? this.enabled,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  Person copyWithCompanion(PersonsCompanion data) {
+    return Person(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      enabled: data.enabled.present ? data.enabled.value : this.enabled,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Person(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('enabled: $enabled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, enabled, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Person &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.enabled == this.enabled &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PersonsCompanion extends UpdateCompanion<Person> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<bool> enabled;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const PersonsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.enabled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  PersonsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.enabled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<Person> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<bool>? enabled,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (enabled != null) 'enabled': enabled,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  PersonsCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? name,
+      Value<bool>? enabled,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt}) {
+    return PersonsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      enabled: enabled ?? this.enabled,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (enabled.present) {
+      map['enabled'] = Variable<bool>(enabled.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PersonsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('enabled: $enabled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AssetsTable extends Assets with TableInfo<$AssetsTable, Asset> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -681,6 +980,15 @@ class $AssetsTable extends Assets with TableInfo<$AssetsTable, Asset> {
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
       'notes', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _personIdMeta =
+      const VerificationMeta('personId');
+  @override
+  late final GeneratedColumn<int> personId = GeneratedColumn<int>(
+      'person_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES persons (id) ON DELETE SET NULL'));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -691,7 +999,8 @@ class $AssetsTable extends Assets with TableInfo<$AssetsTable, Asset> {
         valuationDate,
         annualRate,
         startDate,
-        notes
+        notes,
+        personId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -750,6 +1059,10 @@ class $AssetsTable extends Assets with TableInfo<$AssetsTable, Asset> {
       context.handle(
           _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
     }
+    if (data.containsKey('person_id')) {
+      context.handle(_personIdMeta,
+          personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta));
+    }
     return context;
   }
 
@@ -777,6 +1090,8 @@ class $AssetsTable extends Assets with TableInfo<$AssetsTable, Asset> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}start_date']),
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
+      personId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}person_id']),
     );
   }
 
@@ -796,6 +1111,7 @@ class Asset extends DataClass implements Insertable<Asset> {
   final double? annualRate;
   final DateTime? startDate;
   final String? notes;
+  final int? personId;
   const Asset(
       {required this.id,
       required this.name,
@@ -805,7 +1121,8 @@ class Asset extends DataClass implements Insertable<Asset> {
       required this.valuationDate,
       this.annualRate,
       this.startDate,
-      this.notes});
+      this.notes,
+      this.personId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -823,6 +1140,9 @@ class Asset extends DataClass implements Insertable<Asset> {
     }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || personId != null) {
+      map['person_id'] = Variable<int>(personId);
     }
     return map;
   }
@@ -843,6 +1163,9 @@ class Asset extends DataClass implements Insertable<Asset> {
           : Value(startDate),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      personId: personId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personId),
     );
   }
 
@@ -859,6 +1182,7 @@ class Asset extends DataClass implements Insertable<Asset> {
       annualRate: serializer.fromJson<double?>(json['annualRate']),
       startDate: serializer.fromJson<DateTime?>(json['startDate']),
       notes: serializer.fromJson<String?>(json['notes']),
+      personId: serializer.fromJson<int?>(json['personId']),
     );
   }
   @override
@@ -874,6 +1198,7 @@ class Asset extends DataClass implements Insertable<Asset> {
       'annualRate': serializer.toJson<double?>(annualRate),
       'startDate': serializer.toJson<DateTime?>(startDate),
       'notes': serializer.toJson<String?>(notes),
+      'personId': serializer.toJson<int?>(personId),
     };
   }
 
@@ -886,7 +1211,8 @@ class Asset extends DataClass implements Insertable<Asset> {
           DateTime? valuationDate,
           Value<double?> annualRate = const Value.absent(),
           Value<DateTime?> startDate = const Value.absent(),
-          Value<String?> notes = const Value.absent()}) =>
+          Value<String?> notes = const Value.absent(),
+          Value<int?> personId = const Value.absent()}) =>
       Asset(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -897,6 +1223,7 @@ class Asset extends DataClass implements Insertable<Asset> {
         annualRate: annualRate.present ? annualRate.value : this.annualRate,
         startDate: startDate.present ? startDate.value : this.startDate,
         notes: notes.present ? notes.value : this.notes,
+        personId: personId.present ? personId.value : this.personId,
       );
   Asset copyWithCompanion(AssetsCompanion data) {
     return Asset(
@@ -912,6 +1239,7 @@ class Asset extends DataClass implements Insertable<Asset> {
           data.annualRate.present ? data.annualRate.value : this.annualRate,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       notes: data.notes.present ? data.notes.value : this.notes,
+      personId: data.personId.present ? data.personId.value : this.personId,
     );
   }
 
@@ -926,14 +1254,15 @@ class Asset extends DataClass implements Insertable<Asset> {
           ..write('valuationDate: $valuationDate, ')
           ..write('annualRate: $annualRate, ')
           ..write('startDate: $startDate, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('personId: $personId')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, name, typeId, amount, currency,
-      valuationDate, annualRate, startDate, notes);
+      valuationDate, annualRate, startDate, notes, personId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -946,7 +1275,8 @@ class Asset extends DataClass implements Insertable<Asset> {
           other.valuationDate == this.valuationDate &&
           other.annualRate == this.annualRate &&
           other.startDate == this.startDate &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.personId == this.personId);
 }
 
 class AssetsCompanion extends UpdateCompanion<Asset> {
@@ -959,6 +1289,7 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
   final Value<double?> annualRate;
   final Value<DateTime?> startDate;
   final Value<String?> notes;
+  final Value<int?> personId;
   const AssetsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -969,6 +1300,7 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
     this.annualRate = const Value.absent(),
     this.startDate = const Value.absent(),
     this.notes = const Value.absent(),
+    this.personId = const Value.absent(),
   });
   AssetsCompanion.insert({
     this.id = const Value.absent(),
@@ -980,6 +1312,7 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
     this.annualRate = const Value.absent(),
     this.startDate = const Value.absent(),
     this.notes = const Value.absent(),
+    this.personId = const Value.absent(),
   })  : name = Value(name),
         typeId = Value(typeId),
         amount = Value(amount),
@@ -994,6 +1327,7 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
     Expression<double>? annualRate,
     Expression<DateTime>? startDate,
     Expression<String>? notes,
+    Expression<int>? personId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1005,6 +1339,7 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
       if (annualRate != null) 'annual_rate': annualRate,
       if (startDate != null) 'start_date': startDate,
       if (notes != null) 'notes': notes,
+      if (personId != null) 'person_id': personId,
     });
   }
 
@@ -1017,7 +1352,8 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
       Value<DateTime>? valuationDate,
       Value<double?>? annualRate,
       Value<DateTime?>? startDate,
-      Value<String?>? notes}) {
+      Value<String?>? notes,
+      Value<int?>? personId}) {
     return AssetsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -1028,6 +1364,7 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
       annualRate: annualRate ?? this.annualRate,
       startDate: startDate ?? this.startDate,
       notes: notes ?? this.notes,
+      personId: personId ?? this.personId,
     );
   }
 
@@ -1061,6 +1398,9 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (personId.present) {
+      map['person_id'] = Variable<int>(personId.value);
+    }
     return map;
   }
 
@@ -1075,7 +1415,8 @@ class AssetsCompanion extends UpdateCompanion<Asset> {
           ..write('valuationDate: $valuationDate, ')
           ..write('annualRate: $annualRate, ')
           ..write('startDate: $startDate, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('personId: $personId')
           ..write(')'))
         .toString();
   }
@@ -1142,9 +1483,27 @@ class $LiabilitiesTable extends Liabilities
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
       'notes', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _personIdMeta =
+      const VerificationMeta('personId');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, typeId, amount, interestRate, dueDate, currency, notes];
+  late final GeneratedColumn<int> personId = GeneratedColumn<int>(
+      'person_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES persons (id) ON DELETE SET NULL'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        typeId,
+        amount,
+        interestRate,
+        dueDate,
+        currency,
+        notes,
+        personId
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1194,6 +1553,10 @@ class $LiabilitiesTable extends Liabilities
       context.handle(
           _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
     }
+    if (data.containsKey('person_id')) {
+      context.handle(_personIdMeta,
+          personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta));
+    }
     return context;
   }
 
@@ -1219,6 +1582,8 @@ class $LiabilitiesTable extends Liabilities
           .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
       notes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}notes']),
+      personId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}person_id']),
     );
   }
 
@@ -1237,6 +1602,7 @@ class Liability extends DataClass implements Insertable<Liability> {
   final DateTime? dueDate;
   final String currency;
   final String? notes;
+  final int? personId;
   const Liability(
       {required this.id,
       required this.name,
@@ -1245,7 +1611,8 @@ class Liability extends DataClass implements Insertable<Liability> {
       this.interestRate,
       this.dueDate,
       required this.currency,
-      this.notes});
+      this.notes,
+      this.personId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1262,6 +1629,9 @@ class Liability extends DataClass implements Insertable<Liability> {
     map['currency'] = Variable<String>(currency);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || personId != null) {
+      map['person_id'] = Variable<int>(personId);
     }
     return map;
   }
@@ -1281,6 +1651,9 @@ class Liability extends DataClass implements Insertable<Liability> {
       currency: Value(currency),
       notes:
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      personId: personId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personId),
     );
   }
 
@@ -1296,6 +1669,7 @@ class Liability extends DataClass implements Insertable<Liability> {
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
       currency: serializer.fromJson<String>(json['currency']),
       notes: serializer.fromJson<String?>(json['notes']),
+      personId: serializer.fromJson<int?>(json['personId']),
     );
   }
   @override
@@ -1310,6 +1684,7 @@ class Liability extends DataClass implements Insertable<Liability> {
       'dueDate': serializer.toJson<DateTime?>(dueDate),
       'currency': serializer.toJson<String>(currency),
       'notes': serializer.toJson<String?>(notes),
+      'personId': serializer.toJson<int?>(personId),
     };
   }
 
@@ -1321,7 +1696,8 @@ class Liability extends DataClass implements Insertable<Liability> {
           Value<double?> interestRate = const Value.absent(),
           Value<DateTime?> dueDate = const Value.absent(),
           String? currency,
-          Value<String?> notes = const Value.absent()}) =>
+          Value<String?> notes = const Value.absent(),
+          Value<int?> personId = const Value.absent()}) =>
       Liability(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -1332,6 +1708,7 @@ class Liability extends DataClass implements Insertable<Liability> {
         dueDate: dueDate.present ? dueDate.value : this.dueDate,
         currency: currency ?? this.currency,
         notes: notes.present ? notes.value : this.notes,
+        personId: personId.present ? personId.value : this.personId,
       );
   Liability copyWithCompanion(LiabilitiesCompanion data) {
     return Liability(
@@ -1345,6 +1722,7 @@ class Liability extends DataClass implements Insertable<Liability> {
       dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
       currency: data.currency.present ? data.currency.value : this.currency,
       notes: data.notes.present ? data.notes.value : this.notes,
+      personId: data.personId.present ? data.personId.value : this.personId,
     );
   }
 
@@ -1358,14 +1736,15 @@ class Liability extends DataClass implements Insertable<Liability> {
           ..write('interestRate: $interestRate, ')
           ..write('dueDate: $dueDate, ')
           ..write('currency: $currency, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('personId: $personId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, name, typeId, amount, interestRate, dueDate, currency, notes);
+  int get hashCode => Object.hash(id, name, typeId, amount, interestRate,
+      dueDate, currency, notes, personId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1377,7 +1756,8 @@ class Liability extends DataClass implements Insertable<Liability> {
           other.interestRate == this.interestRate &&
           other.dueDate == this.dueDate &&
           other.currency == this.currency &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.personId == this.personId);
 }
 
 class LiabilitiesCompanion extends UpdateCompanion<Liability> {
@@ -1389,6 +1769,7 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
   final Value<DateTime?> dueDate;
   final Value<String> currency;
   final Value<String?> notes;
+  final Value<int?> personId;
   const LiabilitiesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1398,6 +1779,7 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
     this.dueDate = const Value.absent(),
     this.currency = const Value.absent(),
     this.notes = const Value.absent(),
+    this.personId = const Value.absent(),
   });
   LiabilitiesCompanion.insert({
     this.id = const Value.absent(),
@@ -1408,6 +1790,7 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
     this.dueDate = const Value.absent(),
     this.currency = const Value.absent(),
     this.notes = const Value.absent(),
+    this.personId = const Value.absent(),
   })  : name = Value(name),
         typeId = Value(typeId),
         amount = Value(amount);
@@ -1420,6 +1803,7 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
     Expression<DateTime>? dueDate,
     Expression<String>? currency,
     Expression<String>? notes,
+    Expression<int>? personId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1430,6 +1814,7 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
       if (dueDate != null) 'due_date': dueDate,
       if (currency != null) 'currency': currency,
       if (notes != null) 'notes': notes,
+      if (personId != null) 'person_id': personId,
     });
   }
 
@@ -1441,7 +1826,8 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
       Value<double?>? interestRate,
       Value<DateTime?>? dueDate,
       Value<String>? currency,
-      Value<String?>? notes}) {
+      Value<String?>? notes,
+      Value<int?>? personId}) {
     return LiabilitiesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -1451,6 +1837,7 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
       dueDate: dueDate ?? this.dueDate,
       currency: currency ?? this.currency,
       notes: notes ?? this.notes,
+      personId: personId ?? this.personId,
     );
   }
 
@@ -1481,6 +1868,9 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (personId.present) {
+      map['person_id'] = Variable<int>(personId.value);
+    }
     return map;
   }
 
@@ -1494,7 +1884,8 @@ class LiabilitiesCompanion extends UpdateCompanion<Liability> {
           ..write('interestRate: $interestRate, ')
           ..write('dueDate: $dueDate, ')
           ..write('currency: $currency, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('personId: $personId')
           ..write(')'))
         .toString();
   }
@@ -2179,305 +2570,6 @@ class AssetChangesCompanion extends UpdateCompanion<AssetChange> {
           ..write('afterAmount: $afterAmount, ')
           ..write('createdAt: $createdAt, ')
           ..write('notes: $notes')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $PersonsTable extends Persons with TableInfo<$PersonsTable, Person> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $PersonsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _enabledMeta =
-      const VerificationMeta('enabled');
-  @override
-  late final GeneratedColumn<bool> enabled = GeneratedColumn<bool>(
-      'enabled', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("enabled" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      clientDefault: () => DateTime.now());
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      clientDefault: () => DateTime.now());
-  @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, enabled, createdAt, updatedAt];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'persons';
-  @override
-  VerificationContext validateIntegrity(Insertable<Person> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('enabled')) {
-      context.handle(_enabledMeta,
-          enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  Person map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Person(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      enabled: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}enabled'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-    );
-  }
-
-  @override
-  $PersonsTable createAlias(String alias) {
-    return $PersonsTable(attachedDatabase, alias);
-  }
-}
-
-class Person extends DataClass implements Insertable<Person> {
-  final int id;
-  final String name;
-  final bool enabled;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  const Person(
-      {required this.id,
-      required this.name,
-      required this.enabled,
-      required this.createdAt,
-      required this.updatedAt});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['name'] = Variable<String>(name);
-    map['enabled'] = Variable<bool>(enabled);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    return map;
-  }
-
-  PersonsCompanion toCompanion(bool nullToAbsent) {
-    return PersonsCompanion(
-      id: Value(id),
-      name: Value(name),
-      enabled: Value(enabled),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory Person.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Person(
-      id: serializer.fromJson<int>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      enabled: serializer.fromJson<bool>(json['enabled']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'name': serializer.toJson<String>(name),
-      'enabled': serializer.toJson<bool>(enabled),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-    };
-  }
-
-  Person copyWith(
-          {int? id,
-          String? name,
-          bool? enabled,
-          DateTime? createdAt,
-          DateTime? updatedAt}) =>
-      Person(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        enabled: enabled ?? this.enabled,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
-  Person copyWithCompanion(PersonsCompanion data) {
-    return Person(
-      id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      enabled: data.enabled.present ? data.enabled.value : this.enabled,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Person(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('enabled: $enabled, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, name, enabled, createdAt, updatedAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Person &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.enabled == this.enabled &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
-}
-
-class PersonsCompanion extends UpdateCompanion<Person> {
-  final Value<int> id;
-  final Value<String> name;
-  final Value<bool> enabled;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  const PersonsCompanion({
-    this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.enabled = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-  });
-  PersonsCompanion.insert({
-    this.id = const Value.absent(),
-    required String name,
-    this.enabled = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-  }) : name = Value(name);
-  static Insertable<Person> custom({
-    Expression<int>? id,
-    Expression<String>? name,
-    Expression<bool>? enabled,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (enabled != null) 'enabled': enabled,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-    });
-  }
-
-  PersonsCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? name,
-      Value<bool>? enabled,
-      Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt}) {
-    return PersonsCompanion(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      enabled: enabled ?? this.enabled,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (enabled.present) {
-      map['enabled'] = Variable<bool>(enabled.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('PersonsCompanion(')
-          ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('enabled: $enabled, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -3204,11 +3296,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $AssetTypesTable assetTypes = $AssetTypesTable(this);
   late final $LiabilityTypesTable liabilityTypes = $LiabilityTypesTable(this);
+  late final $PersonsTable persons = $PersonsTable(this);
   late final $AssetsTable assets = $AssetsTable(this);
   late final $LiabilitiesTable liabilities = $LiabilitiesTable(this);
   late final $AssetHoldingsTable assetHoldings = $AssetHoldingsTable(this);
   late final $AssetChangesTable assetChanges = $AssetChangesTable(this);
-  late final $PersonsTable persons = $PersonsTable(this);
   late final $ExpensesTable expenses = $ExpensesTable(this);
   late final $SnapshotsTable snapshots = $SnapshotsTable(this);
   @override
@@ -3218,17 +3310,31 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         assetTypes,
         liabilityTypes,
+        persons,
         assets,
         liabilities,
         assetHoldings,
         assetChanges,
-        persons,
         expenses,
         snapshots
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('persons',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('assets', kind: UpdateKind.update),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('persons',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('liabilities', kind: UpdateKind.update),
+            ],
+          ),
           WritePropagation(
             on: TableUpdateQuery.onTableName('assets',
                 limitUpdateKind: UpdateKind.delete),
@@ -3744,6 +3850,394 @@ typedef $$LiabilityTypesTableProcessedTableManager = ProcessedTableManager<
     (LiabilityType, $$LiabilityTypesTableReferences),
     LiabilityType,
     PrefetchHooks Function({bool liabilitiesRefs})>;
+typedef $$PersonsTableCreateCompanionBuilder = PersonsCompanion Function({
+  Value<int> id,
+  required String name,
+  Value<bool> enabled,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+typedef $$PersonsTableUpdateCompanionBuilder = PersonsCompanion Function({
+  Value<int> id,
+  Value<String> name,
+  Value<bool> enabled,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+
+final class $$PersonsTableReferences
+    extends BaseReferences<_$AppDatabase, $PersonsTable, Person> {
+  $$PersonsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$AssetsTable, List<Asset>> _assetsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.assets,
+          aliasName: $_aliasNameGenerator(db.persons.id, db.assets.personId));
+
+  $$AssetsTableProcessedTableManager get assetsRefs {
+    final manager = $$AssetsTableTableManager($_db, $_db.assets)
+        .filter((f) => f.personId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_assetsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$LiabilitiesTable, List<Liability>>
+      _liabilitiesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.liabilities,
+              aliasName:
+                  $_aliasNameGenerator(db.persons.id, db.liabilities.personId));
+
+  $$LiabilitiesTableProcessedTableManager get liabilitiesRefs {
+    final manager = $$LiabilitiesTableTableManager($_db, $_db.liabilities)
+        .filter((f) => f.personId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_liabilitiesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ExpensesTable, List<Expense>> _expensesRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.expenses,
+          aliasName: $_aliasNameGenerator(db.persons.id, db.expenses.personId));
+
+  $$ExpensesTableProcessedTableManager get expensesRefs {
+    final manager = $$ExpensesTableTableManager($_db, $_db.expenses)
+        .filter((f) => f.personId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$PersonsTableFilterComposer
+    extends Composer<_$AppDatabase, $PersonsTable> {
+  $$PersonsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get enabled => $composableBuilder(
+      column: $table.enabled, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> assetsRefs(
+      Expression<bool> Function($$AssetsTableFilterComposer f) f) {
+    final $$AssetsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.assets,
+        getReferencedColumn: (t) => t.personId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableFilterComposer(
+              $db: $db,
+              $table: $db.assets,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> liabilitiesRefs(
+      Expression<bool> Function($$LiabilitiesTableFilterComposer f) f) {
+    final $$LiabilitiesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.liabilities,
+        getReferencedColumn: (t) => t.personId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$LiabilitiesTableFilterComposer(
+              $db: $db,
+              $table: $db.liabilities,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> expensesRefs(
+      Expression<bool> Function($$ExpensesTableFilterComposer f) f) {
+    final $$ExpensesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.personId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableFilterComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$PersonsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PersonsTable> {
+  $$PersonsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get enabled => $composableBuilder(
+      column: $table.enabled, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PersonsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PersonsTable> {
+  $$PersonsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<bool> get enabled =>
+      $composableBuilder(column: $table.enabled, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> assetsRefs<T extends Object>(
+      Expression<T> Function($$AssetsTableAnnotationComposer a) f) {
+    final $$AssetsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.assets,
+        getReferencedColumn: (t) => t.personId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AssetsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.assets,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> liabilitiesRefs<T extends Object>(
+      Expression<T> Function($$LiabilitiesTableAnnotationComposer a) f) {
+    final $$LiabilitiesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.liabilities,
+        getReferencedColumn: (t) => t.personId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$LiabilitiesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.liabilities,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> expensesRefs<T extends Object>(
+      Expression<T> Function($$ExpensesTableAnnotationComposer a) f) {
+    final $$ExpensesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.personId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$PersonsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PersonsTable,
+    Person,
+    $$PersonsTableFilterComposer,
+    $$PersonsTableOrderingComposer,
+    $$PersonsTableAnnotationComposer,
+    $$PersonsTableCreateCompanionBuilder,
+    $$PersonsTableUpdateCompanionBuilder,
+    (Person, $$PersonsTableReferences),
+    Person,
+    PrefetchHooks Function(
+        {bool assetsRefs, bool liabilitiesRefs, bool expensesRefs})> {
+  $$PersonsTableTableManager(_$AppDatabase db, $PersonsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PersonsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PersonsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PersonsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<bool> enabled = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              PersonsCompanion(
+            id: id,
+            name: name,
+            enabled: enabled,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+            Value<bool> enabled = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              PersonsCompanion.insert(
+            id: id,
+            name: name,
+            enabled: enabled,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) =>
+                  (e.readTable(table), $$PersonsTableReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: (
+              {assetsRefs = false,
+              liabilitiesRefs = false,
+              expensesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (assetsRefs) db.assets,
+                if (liabilitiesRefs) db.liabilities,
+                if (expensesRefs) db.expenses
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (assetsRefs)
+                    await $_getPrefetchedData<Person, $PersonsTable, Asset>(
+                        currentTable: table,
+                        referencedTable:
+                            $$PersonsTableReferences._assetsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$PersonsTableReferences(db, table, p0).assetsRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.personId == item.id),
+                        typedResults: items),
+                  if (liabilitiesRefs)
+                    await $_getPrefetchedData<Person, $PersonsTable, Liability>(
+                        currentTable: table,
+                        referencedTable:
+                            $$PersonsTableReferences._liabilitiesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$PersonsTableReferences(db, table, p0)
+                                .liabilitiesRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.personId == item.id),
+                        typedResults: items),
+                  if (expensesRefs)
+                    await $_getPrefetchedData<Person, $PersonsTable, Expense>(
+                        currentTable: table,
+                        referencedTable:
+                            $$PersonsTableReferences._expensesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$PersonsTableReferences(db, table, p0)
+                                .expensesRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.personId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$PersonsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PersonsTable,
+    Person,
+    $$PersonsTableFilterComposer,
+    $$PersonsTableOrderingComposer,
+    $$PersonsTableAnnotationComposer,
+    $$PersonsTableCreateCompanionBuilder,
+    $$PersonsTableUpdateCompanionBuilder,
+    (Person, $$PersonsTableReferences),
+    Person,
+    PrefetchHooks Function(
+        {bool assetsRefs, bool liabilitiesRefs, bool expensesRefs})>;
 typedef $$AssetsTableCreateCompanionBuilder = AssetsCompanion Function({
   Value<int> id,
   required String name,
@@ -3754,6 +4248,7 @@ typedef $$AssetsTableCreateCompanionBuilder = AssetsCompanion Function({
   Value<double?> annualRate,
   Value<DateTime?> startDate,
   Value<String?> notes,
+  Value<int?> personId,
 });
 typedef $$AssetsTableUpdateCompanionBuilder = AssetsCompanion Function({
   Value<int> id,
@@ -3765,6 +4260,7 @@ typedef $$AssetsTableUpdateCompanionBuilder = AssetsCompanion Function({
   Value<double?> annualRate,
   Value<DateTime?> startDate,
   Value<String?> notes,
+  Value<int?> personId,
 });
 
 final class $$AssetsTableReferences
@@ -3780,6 +4276,20 @@ final class $$AssetsTableReferences
     final manager = $$AssetTypesTableTableManager($_db, $_db.assetTypes)
         .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_typeIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $PersonsTable _personIdTable(_$AppDatabase db) => db.persons
+      .createAlias($_aliasNameGenerator(db.assets.personId, db.persons.id));
+
+  $$PersonsTableProcessedTableManager? get personId {
+    final $_column = $_itemColumn<int>('person_id');
+    if ($_column == null) return null;
+    final manager = $$PersonsTableTableManager($_db, $_db.persons)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_personIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -3861,6 +4371,26 @@ class $$AssetsTableFilterComposer
             $$AssetTypesTableFilterComposer(
               $db: $db,
               $table: $db.assetTypes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$PersonsTableFilterComposer get personId {
+    final $$PersonsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.personId,
+        referencedTable: $db.persons,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PersonsTableFilterComposer(
+              $db: $db,
+              $table: $db.persons,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -3965,6 +4495,26 @@ class $$AssetsTableOrderingComposer
             ));
     return composer;
   }
+
+  $$PersonsTableOrderingComposer get personId {
+    final $$PersonsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.personId,
+        referencedTable: $db.persons,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PersonsTableOrderingComposer(
+              $db: $db,
+              $table: $db.persons,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$AssetsTableAnnotationComposer
@@ -4012,6 +4562,26 @@ class $$AssetsTableAnnotationComposer
             $$AssetTypesTableAnnotationComposer(
               $db: $db,
               $table: $db.assetTypes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$PersonsTableAnnotationComposer get personId {
+    final $$PersonsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.personId,
+        referencedTable: $db.persons,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PersonsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.persons,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -4075,7 +4645,10 @@ class $$AssetsTableTableManager extends RootTableManager<
     (Asset, $$AssetsTableReferences),
     Asset,
     PrefetchHooks Function(
-        {bool typeId, bool assetHoldingsRefs, bool assetChangesRefs})> {
+        {bool typeId,
+        bool personId,
+        bool assetHoldingsRefs,
+        bool assetChangesRefs})> {
   $$AssetsTableTableManager(_$AppDatabase db, $AssetsTable table)
       : super(TableManagerState(
           db: db,
@@ -4096,6 +4669,7 @@ class $$AssetsTableTableManager extends RootTableManager<
             Value<double?> annualRate = const Value.absent(),
             Value<DateTime?> startDate = const Value.absent(),
             Value<String?> notes = const Value.absent(),
+            Value<int?> personId = const Value.absent(),
           }) =>
               AssetsCompanion(
             id: id,
@@ -4107,6 +4681,7 @@ class $$AssetsTableTableManager extends RootTableManager<
             annualRate: annualRate,
             startDate: startDate,
             notes: notes,
+            personId: personId,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -4118,6 +4693,7 @@ class $$AssetsTableTableManager extends RootTableManager<
             Value<double?> annualRate = const Value.absent(),
             Value<DateTime?> startDate = const Value.absent(),
             Value<String?> notes = const Value.absent(),
+            Value<int?> personId = const Value.absent(),
           }) =>
               AssetsCompanion.insert(
             id: id,
@@ -4129,6 +4705,7 @@ class $$AssetsTableTableManager extends RootTableManager<
             annualRate: annualRate,
             startDate: startDate,
             notes: notes,
+            personId: personId,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
@@ -4136,6 +4713,7 @@ class $$AssetsTableTableManager extends RootTableManager<
               .toList(),
           prefetchHooksCallback: (
               {typeId = false,
+              personId = false,
               assetHoldingsRefs = false,
               assetChangesRefs = false}) {
             return PrefetchHooks(
@@ -4164,6 +4742,15 @@ class $$AssetsTableTableManager extends RootTableManager<
                     referencedTable: $$AssetsTableReferences._typeIdTable(db),
                     referencedColumn:
                         $$AssetsTableReferences._typeIdTable(db).id,
+                  ) as T;
+                }
+                if (personId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.personId,
+                    referencedTable: $$AssetsTableReferences._personIdTable(db),
+                    referencedColumn:
+                        $$AssetsTableReferences._personIdTable(db).id,
                   ) as T;
                 }
 
@@ -4215,7 +4802,10 @@ typedef $$AssetsTableProcessedTableManager = ProcessedTableManager<
     (Asset, $$AssetsTableReferences),
     Asset,
     PrefetchHooks Function(
-        {bool typeId, bool assetHoldingsRefs, bool assetChangesRefs})>;
+        {bool typeId,
+        bool personId,
+        bool assetHoldingsRefs,
+        bool assetChangesRefs})>;
 typedef $$LiabilitiesTableCreateCompanionBuilder = LiabilitiesCompanion
     Function({
   Value<int> id,
@@ -4226,6 +4816,7 @@ typedef $$LiabilitiesTableCreateCompanionBuilder = LiabilitiesCompanion
   Value<DateTime?> dueDate,
   Value<String> currency,
   Value<String?> notes,
+  Value<int?> personId,
 });
 typedef $$LiabilitiesTableUpdateCompanionBuilder = LiabilitiesCompanion
     Function({
@@ -4237,6 +4828,7 @@ typedef $$LiabilitiesTableUpdateCompanionBuilder = LiabilitiesCompanion
   Value<DateTime?> dueDate,
   Value<String> currency,
   Value<String?> notes,
+  Value<int?> personId,
 });
 
 final class $$LiabilitiesTableReferences
@@ -4253,6 +4845,21 @@ final class $$LiabilitiesTableReferences
     final manager = $$LiabilityTypesTableTableManager($_db, $_db.liabilityTypes)
         .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_typeIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $PersonsTable _personIdTable(_$AppDatabase db) =>
+      db.persons.createAlias(
+          $_aliasNameGenerator(db.liabilities.personId, db.persons.id));
+
+  $$PersonsTableProcessedTableManager? get personId {
+    final $_column = $_itemColumn<int>('person_id');
+    if ($_column == null) return null;
+    final manager = $$PersonsTableTableManager($_db, $_db.persons)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_personIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -4301,6 +4908,26 @@ class $$LiabilitiesTableFilterComposer
             $$LiabilityTypesTableFilterComposer(
               $db: $db,
               $table: $db.liabilityTypes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$PersonsTableFilterComposer get personId {
+    final $$PersonsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.personId,
+        referencedTable: $db.persons,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PersonsTableFilterComposer(
+              $db: $db,
+              $table: $db.persons,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -4360,6 +4987,26 @@ class $$LiabilitiesTableOrderingComposer
             ));
     return composer;
   }
+
+  $$PersonsTableOrderingComposer get personId {
+    final $$PersonsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.personId,
+        referencedTable: $db.persons,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PersonsTableOrderingComposer(
+              $db: $db,
+              $table: $db.persons,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$LiabilitiesTableAnnotationComposer
@@ -4411,6 +5058,26 @@ class $$LiabilitiesTableAnnotationComposer
             ));
     return composer;
   }
+
+  $$PersonsTableAnnotationComposer get personId {
+    final $$PersonsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.personId,
+        referencedTable: $db.persons,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$PersonsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.persons,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$LiabilitiesTableTableManager extends RootTableManager<
@@ -4424,7 +5091,7 @@ class $$LiabilitiesTableTableManager extends RootTableManager<
     $$LiabilitiesTableUpdateCompanionBuilder,
     (Liability, $$LiabilitiesTableReferences),
     Liability,
-    PrefetchHooks Function({bool typeId})> {
+    PrefetchHooks Function({bool typeId, bool personId})> {
   $$LiabilitiesTableTableManager(_$AppDatabase db, $LiabilitiesTable table)
       : super(TableManagerState(
           db: db,
@@ -4444,6 +5111,7 @@ class $$LiabilitiesTableTableManager extends RootTableManager<
             Value<DateTime?> dueDate = const Value.absent(),
             Value<String> currency = const Value.absent(),
             Value<String?> notes = const Value.absent(),
+            Value<int?> personId = const Value.absent(),
           }) =>
               LiabilitiesCompanion(
             id: id,
@@ -4454,6 +5122,7 @@ class $$LiabilitiesTableTableManager extends RootTableManager<
             dueDate: dueDate,
             currency: currency,
             notes: notes,
+            personId: personId,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -4464,6 +5133,7 @@ class $$LiabilitiesTableTableManager extends RootTableManager<
             Value<DateTime?> dueDate = const Value.absent(),
             Value<String> currency = const Value.absent(),
             Value<String?> notes = const Value.absent(),
+            Value<int?> personId = const Value.absent(),
           }) =>
               LiabilitiesCompanion.insert(
             id: id,
@@ -4474,6 +5144,7 @@ class $$LiabilitiesTableTableManager extends RootTableManager<
             dueDate: dueDate,
             currency: currency,
             notes: notes,
+            personId: personId,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -4481,7 +5152,7 @@ class $$LiabilitiesTableTableManager extends RootTableManager<
                     $$LiabilitiesTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({typeId = false}) {
+          prefetchHooksCallback: ({typeId = false, personId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -4508,6 +5179,16 @@ class $$LiabilitiesTableTableManager extends RootTableManager<
                         $$LiabilitiesTableReferences._typeIdTable(db).id,
                   ) as T;
                 }
+                if (personId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.personId,
+                    referencedTable:
+                        $$LiabilitiesTableReferences._personIdTable(db),
+                    referencedColumn:
+                        $$LiabilitiesTableReferences._personIdTable(db).id,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -4530,7 +5211,7 @@ typedef $$LiabilitiesTableProcessedTableManager = ProcessedTableManager<
     $$LiabilitiesTableUpdateCompanionBuilder,
     (Liability, $$LiabilitiesTableReferences),
     Liability,
-    PrefetchHooks Function({bool typeId})>;
+    PrefetchHooks Function({bool typeId, bool personId})>;
 typedef $$AssetHoldingsTableCreateCompanionBuilder = AssetHoldingsCompanion
     Function({
   Value<int> id,
@@ -5099,249 +5780,6 @@ typedef $$AssetChangesTableProcessedTableManager = ProcessedTableManager<
     (AssetChange, $$AssetChangesTableReferences),
     AssetChange,
     PrefetchHooks Function({bool assetId})>;
-typedef $$PersonsTableCreateCompanionBuilder = PersonsCompanion Function({
-  Value<int> id,
-  required String name,
-  Value<bool> enabled,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-});
-typedef $$PersonsTableUpdateCompanionBuilder = PersonsCompanion Function({
-  Value<int> id,
-  Value<String> name,
-  Value<bool> enabled,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-});
-
-final class $$PersonsTableReferences
-    extends BaseReferences<_$AppDatabase, $PersonsTable, Person> {
-  $$PersonsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$ExpensesTable, List<Expense>> _expensesRefsTable(
-          _$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(db.expenses,
-          aliasName: $_aliasNameGenerator(db.persons.id, db.expenses.personId));
-
-  $$ExpensesTableProcessedTableManager get expensesRefs {
-    final manager = $$ExpensesTableTableManager($_db, $_db.expenses)
-        .filter((f) => f.personId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-}
-
-class $$PersonsTableFilterComposer
-    extends Composer<_$AppDatabase, $PersonsTable> {
-  $$PersonsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get enabled => $composableBuilder(
-      column: $table.enabled, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  Expression<bool> expensesRefs(
-      Expression<bool> Function($$ExpensesTableFilterComposer f) f) {
-    final $$ExpensesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.expenses,
-        getReferencedColumn: (t) => t.personId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ExpensesTableFilterComposer(
-              $db: $db,
-              $table: $db.expenses,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$PersonsTableOrderingComposer
-    extends Composer<_$AppDatabase, $PersonsTable> {
-  $$PersonsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get enabled => $composableBuilder(
-      column: $table.enabled, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-}
-
-class $$PersonsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $PersonsTable> {
-  $$PersonsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<bool> get enabled =>
-      $composableBuilder(column: $table.enabled, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  Expression<T> expensesRefs<T extends Object>(
-      Expression<T> Function($$ExpensesTableAnnotationComposer a) f) {
-    final $$ExpensesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.expenses,
-        getReferencedColumn: (t) => t.personId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ExpensesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.expenses,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$PersonsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $PersonsTable,
-    Person,
-    $$PersonsTableFilterComposer,
-    $$PersonsTableOrderingComposer,
-    $$PersonsTableAnnotationComposer,
-    $$PersonsTableCreateCompanionBuilder,
-    $$PersonsTableUpdateCompanionBuilder,
-    (Person, $$PersonsTableReferences),
-    Person,
-    PrefetchHooks Function({bool expensesRefs})> {
-  $$PersonsTableTableManager(_$AppDatabase db, $PersonsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$PersonsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$PersonsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$PersonsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<bool> enabled = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-          }) =>
-              PersonsCompanion(
-            id: id,
-            name: name,
-            enabled: enabled,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String name,
-            Value<bool> enabled = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-          }) =>
-              PersonsCompanion.insert(
-            id: id,
-            name: name,
-            enabled: enabled,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$PersonsTableReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: ({expensesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (expensesRefs) db.expenses],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (expensesRefs)
-                    await $_getPrefetchedData<Person, $PersonsTable, Expense>(
-                        currentTable: table,
-                        referencedTable:
-                            $$PersonsTableReferences._expensesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$PersonsTableReferences(db, table, p0)
-                                .expensesRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.personId == item.id),
-                        typedResults: items)
-                ];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$PersonsTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $PersonsTable,
-    Person,
-    $$PersonsTableFilterComposer,
-    $$PersonsTableOrderingComposer,
-    $$PersonsTableAnnotationComposer,
-    $$PersonsTableCreateCompanionBuilder,
-    $$PersonsTableUpdateCompanionBuilder,
-    (Person, $$PersonsTableReferences),
-    Person,
-    PrefetchHooks Function({bool expensesRefs})>;
 typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
   Value<int> id,
   required String name,
@@ -5820,6 +6258,8 @@ class $AppDatabaseManager {
       $$AssetTypesTableTableManager(_db, _db.assetTypes);
   $$LiabilityTypesTableTableManager get liabilityTypes =>
       $$LiabilityTypesTableTableManager(_db, _db.liabilityTypes);
+  $$PersonsTableTableManager get persons =>
+      $$PersonsTableTableManager(_db, _db.persons);
   $$AssetsTableTableManager get assets =>
       $$AssetsTableTableManager(_db, _db.assets);
   $$LiabilitiesTableTableManager get liabilities =>
@@ -5828,8 +6268,6 @@ class $AppDatabaseManager {
       $$AssetHoldingsTableTableManager(_db, _db.assetHoldings);
   $$AssetChangesTableTableManager get assetChanges =>
       $$AssetChangesTableTableManager(_db, _db.assetChanges);
-  $$PersonsTableTableManager get persons =>
-      $$PersonsTableTableManager(_db, _db.persons);
   $$ExpensesTableTableManager get expenses =>
       $$ExpensesTableTableManager(_db, _db.expenses);
   $$SnapshotsTableTableManager get snapshots =>

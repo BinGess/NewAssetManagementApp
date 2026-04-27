@@ -38,6 +38,7 @@ class AssetRepository {
     double? annualRate,
     DateTime? startDate,
     String? notes,
+    int? personId,
   }) {
     return _db.into(_db.assets).insert(AssetsCompanion(
           name: Value(name),
@@ -48,6 +49,7 @@ class AssetRepository {
           annualRate: Value(annualRate),
           startDate: Value(startDate),
           notes: Value(notes),
+          personId: Value(personId),
         ));
   }
 
@@ -75,6 +77,7 @@ class AssetRepository {
             annualRate: Value(updated.annualRate),
             startDate: Value(updated.startDate),
             notes: Value(updated.notes),
+            personId: Value(updated.personId),
           ));
     });
   }
@@ -145,6 +148,7 @@ class AssetRepository {
         annualRate: row.annualRate,
         startDate: row.startDate,
         notes: row.notes,
+        personId: row.personId,
       );
 
   change_model.AssetChange _changeFromRow(AssetChange row) =>

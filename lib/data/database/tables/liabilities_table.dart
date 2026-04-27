@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'liability_types_table.dart';
+import 'persons_table.dart';
 
 class Liabilities extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -11,4 +12,8 @@ class Liabilities extends Table {
   DateTimeColumn get dueDate => dateTime().nullable()();
   TextColumn get currency => text().withDefault(const Constant('CNY'))();
   TextColumn get notes => text().nullable()();
+  // v2: person attribution
+  IntColumn get personId => integer()
+      .nullable()
+      .references(Persons, #id, onDelete: KeyAction.setNull)();
 }

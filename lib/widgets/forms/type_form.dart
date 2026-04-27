@@ -5,6 +5,7 @@ import '../../core/utils/validators.dart';
 import '../../data/models/asset_type.dart';
 import '../../data/models/liability_type.dart';
 import '../../providers/repository_providers.dart';
+import '../common/form_sheet.dart';
 
 // ─── Generic Type Form (asset or liability) ───────────────────────────────────
 
@@ -112,13 +113,7 @@ class _TypeFormState extends ConsumerState<TypeForm> {
         ? (_kind == _TypeKind.asset ? '编辑资产类型' : '编辑负债类型')
         : (_kind == _TypeKind.asset ? '添加资产类型' : '添加负债类型');
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-        top: AppSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
-      ),
+    return FormSheet(
       child: Form(
         key: _formKey,
         child: Column(
@@ -231,13 +226,7 @@ class _PersonFormState extends ConsumerState<PersonForm> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.personId != null;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-        top: AppSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
-      ),
+    return FormSheet(
       child: Form(
         key: _formKey,
         child: Column(

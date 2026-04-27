@@ -6,6 +6,8 @@ import '../../data/models/enums.dart';
 import '../../data/models/expense.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../common/bottom_sheet_picker.dart';
+import '../common/form_sheet.dart';
 
 class ExpenseForm extends ConsumerStatefulWidget {
   final Expense? initialExpense;
@@ -103,20 +105,13 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
   Widget build(BuildContext context) {
     final personsAsync = ref.watch(personsStreamProvider);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-        top: AppSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
-      ),
+    return FormSheet(
       child: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
               Text(
                 widget.initialExpense == null ? '添加固定支出' : '编辑固定支出',
                 style: Theme.of(context).textTheme.titleLarge,
@@ -155,21 +150,21 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
               ),
               const SizedBox(height: AppSpacing.sm),
 
-              // Person dropdown
+              // Person — bottom sheet picker
               personsAsync.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (_, __) => const Text('加载人员失败'),
                 data: (persons) {
                   final enabled = persons.where((p) => p.enabled).toList();
-                  return DropdownButtonFormField<int>(
-                    initialValue: _selectedPersonId,
-                    decoration: const InputDecoration(labelText: '归属人员 *'),
-                    items: enabled
-                        .map((p) =>
-                            DropdownMenuItem(value: p.id, child: Text(p.name)))
+                  return BottomSheetPicker<int>(
+                    label: '归属人员 *',
+                    selectedValue: _selectedPersonId,
+                    options: enabled
+                        .map((p) => PickerOption(value: p.id, label: p.name))
                         .toList(),
                     onChanged: (v) => setState(() => _selectedPersonId = v),
                     validator: (v) => v == null ? '请选择人员' : null,
+                    emptyHint: '请选择人员',
                   );
                 },
               ),
@@ -207,7 +202,6 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

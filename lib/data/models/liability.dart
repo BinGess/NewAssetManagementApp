@@ -7,6 +7,7 @@ class Liability {
   final DateTime? dueDate;
   final String currency;
   final String? notes;
+  final int? personId;
 
   const Liability({
     required this.id,
@@ -17,6 +18,7 @@ class Liability {
     this.interestRate,
     this.dueDate,
     this.notes,
+    this.personId,
   });
 
   /// Whether this liability is past its due date
@@ -31,6 +33,7 @@ class Liability {
     Object? dueDate = _sentinel,
     String? currency,
     Object? notes = _sentinel,
+    Object? personId = _sentinel,
   }) {
     return Liability(
       id: id ?? this.id,
@@ -42,6 +45,7 @@ class Liability {
       dueDate: dueDate == _sentinel ? this.dueDate : dueDate as DateTime?,
       currency: currency ?? this.currency,
       notes: notes == _sentinel ? this.notes : notes as String?,
+      personId: personId == _sentinel ? this.personId : personId as int?,
     );
   }
 

@@ -6,7 +6,7 @@ class AuthNotifier extends Notifier<bool> {
   final _storage = const FlutterSecureStorage();
 
   @override
-  bool build() => false; // Not authenticated by default
+  bool build() => true; // Auth disabled — always logged in
 
   Future<bool> login(String input) async {
     final stored = await _storage.read(key: _passwordKey);

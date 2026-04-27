@@ -8,6 +8,7 @@ class Asset {
   final double? annualRate;
   final DateTime? startDate;
   final String? notes;
+  final int? personId;
 
   const Asset({
     required this.id,
@@ -19,6 +20,7 @@ class Asset {
     this.annualRate,
     this.startDate,
     this.notes,
+    this.personId,
   });
 
   /// Daily earnings based on annual rate (e.g. money market funds)
@@ -50,6 +52,7 @@ class Asset {
     Object? annualRate = _sentinel,
     Object? startDate = _sentinel,
     Object? notes = _sentinel,
+    Object? personId = _sentinel,
   }) {
     return Asset(
       id: id ?? this.id,
@@ -61,6 +64,7 @@ class Asset {
       annualRate: annualRate == _sentinel ? this.annualRate : annualRate as double?,
       startDate: startDate == _sentinel ? this.startDate : startDate as DateTime?,
       notes: notes == _sentinel ? this.notes : notes as String?,
+      personId: personId == _sentinel ? this.personId : personId as int?,
     );
   }
 
