@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/enums.dart';
-import '../../data/models/expense.dart';
-import '../../providers/data_providers.dart';
-import '../../providers/repository_providers.dart';
+import '../../data/services/backend_asset_api.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/backend_data_providers.dart';
+import '../../widgets/common/app_card.dart';
 import '../../widgets/common/app_empty_state.dart';
 import '../../widgets/common/app_loading.dart';
 import '../../widgets/common/confirm_dialog.dart';
-import '../../widgets/expenses/expense_list_tile.dart';
-import '../../widgets/forms/expense_form.dart';
+import '../../widgets/forms/backend_expense_form.dart';
 
 class ExpenseListScreen extends ConsumerStatefulWidget {
   const ExpenseListScreen({super.key});
@@ -20,25 +22,25 @@ class ExpenseListScreen extends ConsumerStatefulWidget {
 }
 
 class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
-  // Filter state
-  int? _selectedPersonId;
+  String? _selectedPersonId;
   ExpenseCycle? _selectedCycle;
 
-  void _showForm(BuildContext context, {Expense? expense}) {
+  void _showForm({BackendExpense? expense}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ExpenseForm(initialExpense: expense),
+      builder: (_) => BackendExpenseForm(initialExpense: expense),
     );
   }
 
-  List<Expense> _applyFilters(List<Expense> expenses) {
-    return expenses.where((e) {
-      if (_selectedPersonId != null && e.personId != _selectedPersonId) {
+  List<BackendExpense> _applyFilters(List<BackendExpense> expenses) {
+    return expenses.where((expense) {
+      if (_selectedPersonId != null && expense.personId != _selectedPersonId) {
         return false;
       }
-      if (_selectedCycle != null && e.cycle != _selectedCycle) {
+      if (_selectedCycle != null &&
+          _cycleFromServer(expense.cycle) != _selectedCycle) {
         return false;
       }
       return true;
@@ -47,47 +49,44 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final expensesAsync = ref.watch(expensesStreamProvider);
-    final personsAsync = ref.watch(personsStreamProvider);
+    final expensesAsync = ref.watch(backendExpensesProvider);
+    final persons = ref.watch(backendPersonsProvider).valueOrNull ?? [];
+    final personMap = {for (final person in persons) person.id: person.name};
 
     return Scaffold(
-      appBar: AppBar(title: const Text('固定支出')),
+      appBar: AppBar(
+        title: const Text('固定支出'),
+        actions: [
+          IconButton(
+            tooltip: '刷新',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => ref.invalidate(backendExpensesProvider),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showForm(context),
+        onPressed: () => _showForm(),
         child: const Icon(Icons.add),
       ),
       body: expensesAsync.when(
         loading: () => const AppLoading(),
         error: (e, _) => Center(child: Text('加载失败: $e')),
         data: (allExpenses) {
-          final persons = personsAsync.valueOrNull ?? [];
-          final personMap =
-              persons.fold<Map<int, String>>({}, (m, p) => m..[p.id] = p.name);
-
           final filtered = _applyFilters(allExpenses);
           final monthlyTotal =
-              filtered.fold(0.0, (s, e) => s + e.monthlyAmount);
+              filtered.fold(0.0, (s, e) => s + _monthlyAmount(e));
 
           return Column(
             children: [
-              // Filter bar
               _FilterBar(
                 persons: persons,
                 selectedPersonId: _selectedPersonId,
                 selectedCycle: _selectedCycle,
-                onPersonChanged: (id) =>
-                    setState(() => _selectedPersonId = id),
+                onPersonChanged: (id) => setState(() => _selectedPersonId = id),
                 onCycleChanged: (cycle) =>
                     setState(() => _selectedCycle = cycle),
               ),
-
-              // Monthly total card
-              _MonthlyTotalCard(
-                total: monthlyTotal,
-                count: filtered.length,
-              ),
-
-              // List
+              _MonthlyTotalCard(total: monthlyTotal, count: filtered.length),
               Expanded(
                 child: filtered.isEmpty
                     ? AppEmptyState(
@@ -98,7 +97,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
                             : '请调整筛选条件',
                         action: allExpenses.isEmpty
                             ? ElevatedButton(
-                                onPressed: () => _showForm(context),
+                                onPressed: () => _showForm(),
                                 child: const Text('添加支出'),
                               )
                             : null,
@@ -108,25 +107,11 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final expense = filtered[index];
-                          return ExpenseListTile(
+                          return _ExpenseCard(
                             expense: expense,
                             personName: personMap[expense.personId] ?? '未知',
-                            onEdit: () =>
-                                _showForm(context, expense: expense),
-                            onDelete: () async {
-                              final confirmed = await showConfirmDialog(
-                                context,
-                                title: '删除支出',
-                                content:
-                                    '确认删除「${expense.name}」？此操作无法撤销。',
-                                isDestructive: true,
-                              );
-                              if (confirmed && mounted) {
-                                await ref
-                                    .read(expenseRepositoryProvider)
-                                    .delete(expense.id);
-                              }
-                            },
+                            onEdit: () => _showForm(expense: expense),
+                            onDelete: () => _deleteExpense(expense),
                           );
                         },
                       ),
@@ -137,15 +122,27 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
       ),
     );
   }
+
+  Future<void> _deleteExpense(BackendExpense expense) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: '删除支出',
+      content: '确认删除「${expense.name}」？此操作无法撤销。',
+      isDestructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    final token = ref.read(authProvider).valueOrNull?.accessToken;
+    if (token == null) return;
+    await ref.read(backendAssetApiProvider).deleteExpense(token, expense.id);
+    ref.invalidate(backendExpensesProvider);
+  }
 }
 
-// ─── Filter Bar ──────────────────────────────────────────────────────────────
-
 class _FilterBar extends StatelessWidget {
-  final List<dynamic> persons;
-  final int? selectedPersonId;
+  final List<BackendPerson> persons;
+  final String? selectedPersonId;
   final ExpenseCycle? selectedCycle;
-  final ValueChanged<int?> onPersonChanged;
+  final ValueChanged<String?> onPersonChanged;
   final ValueChanged<ExpenseCycle?> onCycleChanged;
 
   const _FilterBar({
@@ -161,52 +158,52 @@ class _FilterBar extends StatelessWidget {
     return Container(
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            // All chip
             Padding(
               padding: const EdgeInsets.only(right: 6),
               child: FilterChip(
                 label: const Text('全部'),
-                selected:
-                    selectedPersonId == null && selectedCycle == null,
+                selected: selectedPersonId == null && selectedCycle == null,
                 onSelected: (_) {
                   onPersonChanged(null);
                   onCycleChanged(null);
                 },
               ),
             ),
-            // Cycle filter chips
-            ...ExpenseCycle.values.map((cycle) => Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: FilterChip(
-                    label: Text(cycle.label),
-                    selected: selectedCycle == cycle,
-                    onSelected: (selected) =>
-                        onCycleChanged(selected ? cycle : null),
-                  ),
-                )),
-            // Person filter chips
-            ...persons.map((p) => Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: FilterChip(
-                    label: Text(p.name as String),
-                    selected: selectedPersonId == (p.id as int),
-                    onSelected: (selected) =>
-                        onPersonChanged(selected ? p.id as int : null),
-                  ),
-                )),
+            ...ExpenseCycle.values.map(
+              (cycle) => Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: FilterChip(
+                  label: Text(cycle.label),
+                  selected: selectedCycle == cycle,
+                  onSelected: (selected) =>
+                      onCycleChanged(selected ? cycle : null),
+                ),
+              ),
+            ),
+            ...persons.map(
+              (person) => Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: FilterChip(
+                  label: Text(person.name),
+                  selected: selectedPersonId == person.id,
+                  onSelected: (selected) =>
+                      onPersonChanged(selected ? person.id : null),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
-// ─── Monthly Total Card ───────────────────────────────────────────────────────
 
 class _MonthlyTotalCard extends StatelessWidget {
   final double total;
@@ -216,46 +213,117 @@ class _MonthlyTotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.all(AppSpacing.md),
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.xs,
       ),
-      child: Row(
-        children: [
-          Icon(Icons.receipt_long, color: colorScheme.onErrorContainer),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('当前筛选月均总支出',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onErrorContainer,
-                    )),
-                Text(
-                  formatCNY(total),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onErrorContainer,
-                  ),
-                ),
-              ],
+      child: GlassCard(
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_month_outlined, color: AppColors.accent),
+            const SizedBox(width: 12),
+            Expanded(child: Text('$count 笔固定支出，月均合计')),
+            Text(
+              formatCNY(total),
+              style: const TextStyle(
+                color: AppColors.liabilityColor,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          Text(
-            '$count 笔',
-            style: TextStyle(color: colorScheme.onErrorContainer),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+class _ExpenseCard extends StatelessWidget {
+  final BackendExpense expense;
+  final String personName;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _ExpenseCard({
+    required this.expense,
+    required this.personName,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cycle = _cycleFromServer(expense.cycle);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            const Icon(Icons.receipt_long_rounded, color: AppColors.accent),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(expense.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${cycle.label} · $personName · 月均 ${formatCNY(_monthlyAmount(expense))}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              formatCNY(_amount(expense)),
+              style: const TextStyle(
+                color: AppColors.liabilityColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit') onEdit();
+                if (value == 'delete') onDelete();
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('编辑')),
+                PopupMenuItem(value: 'delete', child: Text('删除')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+ExpenseCycle _cycleFromServer(String value) {
+  return switch (value) {
+    'DAILY' => ExpenseCycle.daily,
+    'WEEKLY' => ExpenseCycle.weekly,
+    'YEARLY' => ExpenseCycle.yearly,
+    _ => ExpenseCycle.monthly,
+  };
+}
+
+double _amount(BackendExpense expense) => double.tryParse(expense.amount) ?? 0;
+
+double _monthlyAmount(BackendExpense expense) {
+  final amount = _amount(expense);
+  return switch (_cycleFromServer(expense.cycle)) {
+    ExpenseCycle.daily => amount * 30,
+    ExpenseCycle.weekly => amount * (52 / 12),
+    ExpenseCycle.monthly => amount,
+    ExpenseCycle.yearly => amount / 12,
+  };
 }

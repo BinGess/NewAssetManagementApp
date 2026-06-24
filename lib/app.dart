@@ -40,24 +40,44 @@ class _AppState extends ConsumerState<App> {
           builder: (context, state, child) => MainShell(child: child),
           routes: [
             GoRoute(path: '/', builder: (_, __) => const DashboardScreen()),
-            GoRoute(path: '/assets', builder: (_, __) => const AssetListScreen()),
+            GoRoute(
+                path: '/assets', builder: (_, __) => const AssetListScreen()),
             GoRoute(
               path: '/assets/:id',
               builder: (context, state) {
-                final id = int.tryParse(state.pathParameters['id'] ?? '');
-                if (id == null) return const AssetListScreen();
+                final id = state.pathParameters['id'];
+                if (id == null || id.isEmpty) return const AssetListScreen();
                 return AssetDetailScreen(assetId: id);
               },
             ),
-            GoRoute(path: '/liabilities', builder: (_, __) => const LiabilityListScreen()),
-            GoRoute(path: '/expenses', builder: (_, __) => const ExpenseListScreen()),
-            GoRoute(path: '/types', builder: (_, __) => const TypesManagementScreen()),
-            GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+            GoRoute(
+                path: '/liabilities',
+                builder: (_, __) => const LiabilityListScreen()),
+            GoRoute(
+                path: '/expenses',
+                builder: (_, __) => const ExpenseListScreen()),
+            GoRoute(
+                path: '/types',
+                builder: (_, __) => const TypesManagementScreen()),
+            GoRoute(
+                path: '/settings', builder: (_, __) => const SettingsScreen()),
           ],
         ),
       ],
       redirect: (context, state) {
-        // Auth disabled — no redirect needed
+        final auth = ref.read(authProvider);
+        final isLoginRoute = state.matchedLocation == '/login';
+        final isAuthenticated = auth.valueOrNull?.isAuthenticated ?? false;
+
+        if (auth.isLoading) {
+          return isLoginRoute ? null : '/login';
+        }
+        if (!isAuthenticated) {
+          return isLoginRoute ? null : '/login';
+        }
+        if (isLoginRoute) {
+          return '/';
+        }
         return null;
       },
       refreshListenable: _authListenable,
@@ -101,11 +121,12 @@ class _AppState extends ConsumerState<App> {
 
 /// Makes GoRouter re-evaluate the redirect when auth state changes.
 class _AuthListenable extends ChangeNotifier {
-  ProviderSubscription<bool>? _subscription;
+  ProviderSubscription<AsyncValue<AuthState>>? _subscription;
 
   void _attach(WidgetRef ref) {
     _subscription?.close();
-    _subscription = ref.listenManual(authProvider, (_, __) => notifyListeners());
+    _subscription =
+        ref.listenManual(authProvider, (_, __) => notifyListeners());
   }
 
   @override

@@ -1,9 +1,12 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/auth_provider.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../data/services/backend_api_client.dart';
+import '../../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -13,55 +16,58 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _controller = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscure = true;
-  bool _isLoading = false;
-  bool _isFirstLaunch = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkFirstLaunch();
-  }
-
-  Future<void> _checkFirstLaunch() async {
-    final hasPassword = await ref.read(authProvider.notifier).hasPassword();
-    if (mounted) setState(() => _isFirstLaunch = !hasPassword);
-  }
+  bool _isRegisterMode = false;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    try {
-      final success =
-          await ref.read(authProvider.notifier).login(_controller.text.trim());
-      if (!success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('密码错误，请重试'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+
+    final notifier = ref.read(authProvider.notifier);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (_isRegisterMode) {
+      await notifier.register(email: email, password: password);
+    } else {
+      await notifier.login(email: email, password: password);
     }
+
+    final auth = ref.read(authProvider);
+    if (auth.hasError && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_messageFor(auth.error!)),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  String _messageFor(Object error) {
+    if (error is BackendApiException) {
+      return error.message;
+    }
+    return _isRegisterMode ? '注册失败，请稍后重试' : '登录失败，请检查账号或密码';
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = ref.watch(authProvider);
+    final isLoading = auth.isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.bgBase,
       body: Stack(
         children: [
-          // Gradient background
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -79,22 +85,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
-
-          // Glow blobs
           Positioned(
             top: -100,
             left: -60,
             child: _GlowBlob(
-                color: AppColors.primary.withValues(alpha: 0.15), size: 300),
+              color: AppColors.primary.withValues(alpha: 0.15),
+              size: 300,
+            ),
           ),
           Positioned(
             bottom: 100,
             right: -80,
             child: _GlowBlob(
-                color: AppColors.bgPurple.withValues(alpha: 0.3), size: 250),
+              color: AppColors.bgPurple.withValues(alpha: 0.3),
+              size: 250,
+            ),
           ),
-
-          // Content
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -104,7 +110,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo
                       Container(
                         width: 80,
                         height: 80,
@@ -133,8 +138,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-
-                      // App name
                       const Text(
                         '资产管理',
                         style: TextStyle(
@@ -146,15 +149,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        _isFirstLaunch ? '首次使用，请设置您的登录密码' : '欢迎回来',
+                        _isRegisterMode ? '创建家庭共用账号' : '登录家庭共用账号',
                         style: const TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xl + AppSpacing.md),
-
-                      // Glass card
                       ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: BackdropFilter(
@@ -165,20 +166,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               color: AppColors.glass,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                  color: AppColors.glassBorder, width: 1),
+                                color: AppColors.glassBorder,
+                                width: 1,
+                              ),
                             ),
                             child: Column(
                               children: [
                                 TextFormField(
-                                  controller: _controller,
-                                  obscureText: _obscure,
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  autofillHints: const [AutofillHints.email],
                                   style: const TextStyle(
-                                      color: AppColors.textPrimary),
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    labelText: '邮箱',
+                                    prefixIcon: Icon(
+                                      Icons.mail_outline,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    final text = value?.trim() ?? '';
+                                    if (text.isEmpty) return '邮箱不能为空';
+                                    if (!text.contains('@')) return '请输入有效邮箱';
+                                    return null;
+                                  },
+                                  textInputAction: TextInputAction.next,
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                TextFormField(
+                                  controller: _passwordController,
+                                  obscureText: _obscure,
+                                  autofillHints: const [AutofillHints.password],
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                  ),
                                   decoration: InputDecoration(
-                                    labelText: _isFirstLaunch ? '设置密码' : '登录密码',
+                                    labelText: '密码',
                                     prefixIcon: const Icon(
-                                        Icons.lock_outline,
-                                        color: AppColors.textSecondary),
+                                      Icons.lock_outline,
+                                      color: AppColors.textSecondary,
+                                    ),
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscure
@@ -186,16 +215,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                             : Icons.visibility_outlined,
                                         color: AppColors.textSecondary,
                                       ),
-                                      onPressed: () =>
-                                          setState(() => _obscure = !_obscure),
+                                      onPressed: () {
+                                        setState(() => _obscure = !_obscure);
+                                      },
                                     ),
                                   ),
                                   validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
+                                    if (value == null || value.isEmpty) {
                                       return '密码不能为空';
                                     }
-                                    if (value.trim().length < 4) {
-                                      return '密码至少需要4位';
+                                    if (value.length < 8) {
+                                      return '密码至少需要8位';
                                     }
                                     return null;
                                   },
@@ -203,13 +233,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   textInputAction: TextInputAction.done,
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
-
-                                // Submit button
                                 SizedBox(
                                   width: double.infinity,
                                   height: 52,
                                   child: ElevatedButton(
-                                    onPressed: _isLoading ? null : _submit,
+                                    onPressed: isLoading ? null : _submit,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       foregroundColor: Colors.white,
@@ -217,7 +245,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
-                                    child: _isLoading
+                                    child: isLoading
                                         ? const SizedBox(
                                             height: 20,
                                             width: 20,
@@ -227,12 +255,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                             ),
                                           )
                                         : Text(
-                                            _isFirstLaunch ? '设置密码并登录' : '登录',
+                                            _isRegisterMode ? '注册并登录' : '登录',
                                             style: const TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w700,
                                             ),
                                           ),
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                TextButton(
+                                  onPressed: isLoading
+                                      ? null
+                                      : () {
+                                          setState(() {
+                                            _isRegisterMode = !_isRegisterMode;
+                                          });
+                                        },
+                                  child: Text(
+                                    _isRegisterMode ? '已有账号？去登录' : '还没有账号？先注册',
                                   ),
                                 ),
                               ],
@@ -255,6 +296,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 class _GlowBlob extends StatelessWidget {
   final Color color;
   final double size;
+
   const _GlowBlob({required this.color, required this.size});
 
   @override
@@ -265,7 +307,11 @@ class _GlowBlob extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: color, blurRadius: size * 0.8, spreadRadius: size * 0.1),
+          BoxShadow(
+            color: color,
+            blurRadius: size * 0.8,
+            spreadRadius: size * 0.1,
+          ),
         ],
       ),
     );

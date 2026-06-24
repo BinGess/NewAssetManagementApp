@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../data/models/asset_type.dart';
 import '../../data/models/liability_type.dart';
-import '../../data/models/person.dart';
+import '../../data/services/backend_asset_api.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/backend_data_providers.dart';
 import '../../providers/data_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../widgets/common/app_loading.dart';
 import '../../widgets/common/confirm_dialog.dart';
+import '../../widgets/forms/backend_person_form.dart';
 import '../../widgets/forms/type_form.dart';
 
 class TypesManagementScreen extends ConsumerWidget {
@@ -219,22 +222,18 @@ class _LiabilityTypesTab extends ConsumerWidget {
 class _PersonsTab extends ConsumerWidget {
   const _PersonsTab();
 
-  void _showForm(BuildContext context, {Person? person}) {
+  void _showForm(BuildContext context, {BackendPerson? person}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => PersonForm(
-        personId: person?.id,
-        initialName: person?.name,
-        initialEnabled: person?.enabled,
-      ),
+      builder: (_) => BackendPersonForm(initialPerson: person),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final personsAsync = ref.watch(personsStreamProvider);
+    final personsAsync = ref.watch(backendPersonsProvider);
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.small(
@@ -260,13 +259,17 @@ class _PersonsTab extends ConsumerWidget {
                 subtitle: person.enabled ? '启用' : '停用',
                 enabled: person.enabled,
                 onToggle: () async {
-                  final all =
-                      await ref.read(personRepositoryProvider).getAll();
-                  final existing =
-                      all.firstWhere((p) => p.id == person.id);
-                  await ref
-                      .read(personRepositoryProvider)
-                      .update(existing.copyWith(enabled: !person.enabled));
+                  final token = ref.read(authProvider).valueOrNull?.accessToken;
+                  if (token == null) return;
+                  await ref.read(backendAssetApiProvider).updatePerson(
+                        token,
+                        personId: person.id,
+                        input: BackendPersonUpdate(
+                          version: person.version,
+                          enabled: !person.enabled,
+                        ),
+                      );
+                  ref.invalidate(backendPersonsProvider);
                 },
                 onEdit: () => _showForm(context, person: person),
                 onDelete: () async {
@@ -278,9 +281,13 @@ class _PersonsTab extends ConsumerWidget {
                   );
                   if (confirmed) {
                     try {
+                      final token =
+                          ref.read(authProvider).valueOrNull?.accessToken;
+                      if (token == null) return;
                       await ref
-                          .read(personRepositoryProvider)
-                          .delete(person.id);
+                          .read(backendAssetApiProvider)
+                          .deletePerson(token, person.id);
+                      ref.invalidate(backendPersonsProvider);
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(

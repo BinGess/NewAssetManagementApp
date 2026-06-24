@@ -1,35 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../data/models/liability.dart';
-import '../../providers/data_providers.dart';
-import '../../providers/repository_providers.dart';
+import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/date_formatter.dart';
+import '../../data/services/backend_asset_api.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/backend_data_providers.dart';
+import '../../widgets/common/app_card.dart';
 import '../../widgets/common/app_empty_state.dart';
 import '../../widgets/common/app_loading.dart';
 import '../../widgets/common/confirm_dialog.dart';
-import '../../widgets/forms/liability_form.dart';
-import '../../widgets/liabilities/liability_list_tile.dart';
+import '../../widgets/forms/backend_liability_form.dart';
 
 class LiabilityListScreen extends ConsumerWidget {
   const LiabilityListScreen({super.key});
 
-  void _showForm(BuildContext context, {Liability? liability}) {
+  void _showForm(BuildContext context, {BackendLiability? liability}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => LiabilityForm(initialLiability: liability),
+      builder: (_) => BackendLiabilityForm(initialLiability: liability),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final liabilitiesAsync = ref.watch(liabilitiesStreamProvider);
-    final liabilityTypesAsync = ref.watch(liabilityTypesStreamProvider);
-    final personsAsync = ref.watch(personsStreamProvider);
+    final liabilitiesAsync = ref.watch(backendLiabilitiesProvider);
+    final types = ref.watch(backendLiabilityTypesProvider).valueOrNull ?? [];
+    final persons = ref.watch(backendPersonsProvider).valueOrNull ?? [];
+    final typeMap = {for (final type in types) type.id: type.label};
+    final personMap = {for (final person in persons) person.id: person.name};
 
     return Scaffold(
-      appBar: AppBar(title: const Text('负债管理')),
+      appBar: AppBar(
+        title: const Text('负债管理'),
+        actions: [
+          IconButton(
+            tooltip: '刷新',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => ref.invalidate(backendLiabilitiesProvider),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showForm(context),
         child: const Icon(Icons.add),
@@ -50,50 +65,24 @@ class LiabilityListScreen extends ConsumerWidget {
             );
           }
 
-          final typeMap = liabilityTypesAsync.valueOrNull
-                  ?.fold<Map<int, String>>({}, (m, t) => m..[t.id] = t.label) ??
-              {};
-          final personMap = personsAsync.valueOrNull
-                  ?.fold<Map<int, String>>({}, (m, p) => m..[p.id] = p.name) ??
-              {};
-
-          // Summary card
-          final total = liabilities.fold(0.0, (s, l) => s + l.amount);
-          final overdueCount = liabilities.where((l) => l.isOverdue).length;
-
+          final total = liabilities.fold(0.0, (s, l) => s + _amount(l));
           return Column(
             children: [
-              // Summary banner
               Container(
                 color: Theme.of(context).colorScheme.surfaceContainerLow,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
                 child: Row(
                   children: [
-                    Text('共 ${liabilities.length} 笔',
-                        style: Theme.of(context).textTheme.bodySmall),
-                    if (overdueCount > 0) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text('$overdueCount 笔已逾期',
-                            style: const TextStyle(fontSize: 11, color: Colors.red)),
-                      ),
-                    ],
+                    Text('共 ${liabilities.length} 笔'),
                     const Spacer(),
-                    Text('合计: ',
-                        style: Theme.of(context).textTheme.bodySmall),
-                    Text(
-                      liabilities.isNotEmpty
-                          ? '¥${(total / 10000).toStringAsFixed(2)}万'
-                          : '¥0',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.red),
-                    ),
+                    Text('合计 ${formatCNY(total)}',
+                        style: const TextStyle(
+                          color: AppColors.liabilityColor,
+                          fontWeight: FontWeight.bold,
+                        )),
                   ],
                 ),
               ),
@@ -103,25 +92,14 @@ class LiabilityListScreen extends ConsumerWidget {
                   itemCount: liabilities.length,
                   itemBuilder: (context, index) {
                     final liability = liabilities[index];
-                    return LiabilityListTile(
+                    return _LiabilityCard(
                       liability: liability,
                       typeName: typeMap[liability.typeId] ?? '未知类型',
-                      personName: liability.personId != null
-                          ? personMap[liability.personId]
-                          : null,
+                      personName: liability.personId == null
+                          ? null
+                          : personMap[liability.personId],
                       onEdit: () => _showForm(context, liability: liability),
-                      onDelete: () async {
-                        final confirmed = await showConfirmDialog(
-                          context,
-                          title: '删除负债',
-                          content: '确认删除「${liability.name}」？此操作无法撤销。',
-                          isDestructive: true,
-                        );
-                        if (confirmed) {
-                          await ref.read(liabilityRepositoryProvider).delete(liability.id);
-                          await ref.read(dashboardServiceProvider).recordSnapshot();
-                        }
-                      },
+                      onDelete: () => _deleteLiability(context, ref, liability),
                     );
                   },
                 ),
@@ -132,4 +110,101 @@ class LiabilityListScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Future<void> _deleteLiability(
+    BuildContext context,
+    WidgetRef ref,
+    BackendLiability liability,
+  ) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: '删除负债',
+      content: '确认删除「${liability.name}」？此操作无法撤销。',
+      isDestructive: true,
+    );
+    if (!confirmed) return;
+    final token = ref.read(authProvider).valueOrNull?.accessToken;
+    if (token == null) return;
+    await ref
+        .read(backendAssetApiProvider)
+        .deleteLiability(token, liability.id);
+    ref.invalidate(backendLiabilitiesProvider);
+  }
 }
+
+class _LiabilityCard extends StatelessWidget {
+  final BackendLiability liability;
+  final String typeName;
+  final String? personName;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _LiabilityCard({
+    required this.liability,
+    required this.typeName,
+    required this.personName,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            const Icon(Icons.credit_card_rounded,
+                color: AppColors.liabilityColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(liability.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(
+                    [
+                      typeName,
+                      if (liability.dueDate != null)
+                        '到期 ${formatDate(liability.dueDate!)}',
+                      if (personName != null) personName!,
+                    ].join(' · '),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              formatCNY(_amount(liability)),
+              style: const TextStyle(
+                color: AppColors.liabilityColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit') onEdit();
+                if (value == 'delete') onDelete();
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('编辑')),
+                PopupMenuItem(value: 'delete', child: Text('删除')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+double _amount(BackendLiability liability) =>
+    double.tryParse(liability.amount) ?? 0;

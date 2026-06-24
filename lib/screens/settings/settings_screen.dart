@@ -2,27 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
-import '../auth/change_password_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProvider).valueOrNull;
+
     return Scaffold(
       appBar: AppBar(title: const Text('设置')),
       body: ListView(
         children: [
           const _SectionHeader(title: '账户'),
           ListTile(
-            leading: const Icon(Icons.lock_outline),
-            title: const Text('修改密码'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ChangePasswordScreen(),
-              ),
-            ),
+            leading: const Icon(Icons.account_circle_outlined),
+            title: Text(auth?.email ?? '未登录'),
+            subtitle: const Text('当前登录的家庭共用账号'),
           ),
           ListTile(
             leading: const Icon(Icons.logout),
@@ -46,7 +42,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               );
               if (confirmed == true) {
-                ref.read(authProvider.notifier).logout();
+                await ref.read(authProvider.notifier).logout();
               }
             },
           ),

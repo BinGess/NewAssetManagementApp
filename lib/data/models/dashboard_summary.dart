@@ -1,5 +1,5 @@
 class TypeTotal {
-  final int typeId;
+  final String typeId;
   final String label;
   final double total;
 
@@ -14,6 +14,7 @@ class DashboardSummary {
   final double totalAssets;
   final double totalLiabilities;
   final double netWorth;
+  final double monthlyExpenses;
   final List<TypeTotal> assetsByType;
   final List<TypeTotal> liabilitiesByType;
 
@@ -21,6 +22,7 @@ class DashboardSummary {
     required this.totalAssets,
     required this.totalLiabilities,
     required this.netWorth,
+    required this.monthlyExpenses,
     required this.assetsByType,
     required this.liabilitiesByType,
   });

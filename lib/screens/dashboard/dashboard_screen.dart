@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../providers/backend_data_providers.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../widgets/common/app_loading.dart';
 import '../../widgets/dashboard/breakdown_section.dart';
@@ -10,6 +11,15 @@ import '../../widgets/dashboard/trend_chart.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
+
+  void _refresh(WidgetRef ref) {
+    ref.invalidate(backendAssetsProvider);
+    ref.invalidate(backendLiabilitiesProvider);
+    ref.invalidate(backendAssetTypesProvider);
+    ref.invalidate(backendLiabilityTypesProvider);
+    ref.invalidate(backendExpensesProvider);
+    ref.invalidate(dashboardSummaryProvider);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,8 +54,9 @@ class DashboardScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
-            onPressed: () => ref.invalidate(dashboardSummaryProvider),
+            icon: const Icon(Icons.refresh_rounded,
+                color: AppColors.textSecondary),
+            onPressed: () => _refresh(ref),
             tooltip: '刷新',
           ),
         ],
@@ -59,10 +70,12 @@ class DashboardScreen extends ConsumerWidget {
         data: (summary) => RefreshIndicator(
           color: AppColors.primary,
           backgroundColor: AppColors.bgMid,
-          onRefresh: () async => ref.invalidate(dashboardSummaryProvider),
+          onRefresh: () async => _refresh(ref),
           child: ListView(
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + kToolbarHeight + AppSpacing.md,
+              top: MediaQuery.of(context).padding.top +
+                  kToolbarHeight +
+                  AppSpacing.md,
               left: AppSpacing.md,
               right: AppSpacing.md,
               bottom: AppSpacing.xl,

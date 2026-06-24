@@ -24,6 +24,8 @@ part 'app_database.g.dart';
   Snapshots,
 ])
 class AppDatabase extends _$AppDatabase {
+  static const databaseName = 'asset_management';
+
   AppDatabase() : super(_openConnection());
 
   /// Constructor for testing with an in-memory database
@@ -89,5 +91,5 @@ class AppDatabase extends _$AppDatabase {
 }
 
 QueryExecutor _openConnection() {
-  return driftDatabase(name: 'asset_management');
+  return driftDatabase(name: AppDatabase.databaseName);
 }

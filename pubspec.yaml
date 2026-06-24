@@ -41,6 +41,7 @@ dependencies:
   # Utility
   uuid: ^4.4.0
   collection: ^1.18.0
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
